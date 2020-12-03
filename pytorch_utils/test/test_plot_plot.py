@@ -1,0 +1,20 @@
+import unittest.mock
+import matplotlib.pyplot as plt
+
+import torch
+
+import pytorch_utils.plot.plot
+
+def test_tshow():
+    x = torch.rand(3, 30, 32)
+    xn = x.permute(1, 2, 0).clone().numpy()
+
+    with unittest.mock.patch('matplotlib.pyplot.imshow') as mimshow:
+        pytorch_utils.plot.plot.tshow(x, cmap='gray')
+
+    mimshow.assert_called_once()
+    imshow_arg, = mimshow.call_args.args
+    imshow_kwargs = mimshow.call_args.kwargs
+
+    assert imshow_arg.size() == torch.Size([30, 32, 3])
+    assert 'cmap' in imshow_kwargs.keys()

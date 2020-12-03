@@ -1,7 +1,11 @@
 import torch
 import matplotlib.pyplot as plt
 
+
 def tshow(t: torch.Tensor, autosqueeze: bool = True, *args, **kwargs):
+    """Tensor friendly plt.imshow"""
+
+    t = t.detach().cpu()
     if autosqueeze:
         t = t.squeeze()
     
