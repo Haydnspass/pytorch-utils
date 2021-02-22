@@ -1,27 +1,44 @@
+import itertools
+
+from pytorch_utils import label
+from typing import Optional, Callable
+
 import torch
 
 
-def get_all_labels(ds: torch.utils.data.Dataset, label_index: int = 1, batch_size=64, num_workers=4) -> torch.Tensor:
+def get_all_labels(ds: torch.utils.data.Dataset, label_index: int = 1,
+                    extract_fn: Optional[Callable] = None,
+                    batch_size=64, num_workers=4) -> torch.Tensor:
     """
     Get all unique labels of a ds
 
     Args:
         ds: dataset
         label_index: tuple index of the labels. Defaults to 1 because most stereo-type return is x, y
-        batch_size: 
+        extract_fn: extract tensor form label (e.g. useful if numeric label is somewhere in a dictionary)
+        batch_size:
         num_workers: number of workers for auxiliary dl
 
     """
     dl = torch.utils.data.DataLoader(ds, batch_size=batch_size, num_workers=num_workers)
 
-    label_cache = []
-    
+    label_cache = set()
+
     for batch in dl:
         y = batch[label_index]
-        label_cache.append(y.unique())
-    
-    label_cache = torch.cat(label_cache, 0)
-    label_cache = label_cache.unique()
+        if extract_fn is not None:
+            y = extract_fn(y)
+
+        numeric = True if isinstance(y, torch.LongTensor) else False
+
+        if numeric:
+            assert isinstance(y, torch.LongTensor)
+            label_cache = label_cache | set(y.unique().tolist())
+        else:
+            label_cache = label_cache | {yi for yi in itertools.chain(*y)}
+
+
+    if numeric:
+        label_cache = torch.LongTensor(list(label_cache))
 
     return label_cache
-
