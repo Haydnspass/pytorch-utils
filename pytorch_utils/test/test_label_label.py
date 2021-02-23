@@ -26,9 +26,26 @@ def test_get_all_labels_complex():
             return torch.rand(3, 32, 32), {'objects': torch.arange(ix, ix + 3)}
 
     ds = AdvancedLabelDS()
-    y_out = label.get_all_labels(AdvancedLabelDS(), extract_fn=lambda x: x['objects'])
+    y_out = label.get_all_labels(AdvancedLabelDS(), extract_fn=lambda x: x[1]['objects'])
 
     assert (y_out == torch.arange(102)).all()
+
+
+def test_get_all_label_unequal():
+    class AdvancedLabelDS(torch.utils.data.Dataset):
+        def __len__(self):
+            return 2
+
+        def __getitem__(self, ix):
+            if ix == 0:
+                return ['a']
+            else:
+                return ['a', 'b']
+
+    ds = AdvancedLabelDS()
+    y_out = label.get_all_labels(AdvancedLabelDS(), label_ix=None, num_workers=4)
+
+    assert sorted(y_out) == ['a', 'b']
 
 
 def test_get_all_labels_nonnumeric():
