@@ -6,7 +6,7 @@ from typing import Optional, Callable
 import torch
 
 
-def get_all_labels(ds: torch.utils.data.Dataset, label_index: int = 1,
+def get_all_labels(ds: torch.utils.data.Dataset, label_ix: int = 1,
                     extract_fn: Optional[Callable] = None,
                     batch_size=64, num_workers=4) -> torch.Tensor:
     """
@@ -20,12 +20,25 @@ def get_all_labels(ds: torch.utils.data.Dataset, label_index: int = 1,
         num_workers: number of workers for auxiliary dl
 
     """
+    class LabelOnlyDS(torch.utils.data.Dataset):
+        """In order to be able to ignore the non label stuff which could confuse the temporary dataloader"""
+        def __init__(self, ds_core, label_ix):
+            super().__init__()
+            self.ds_core = ds_core
+            self.label_ix = label_ix
+
+        def __len__(self):
+            return self.ds_core.__len__()
+
+        def __getitem__(self, ix):
+            return self.ds_core.__getitem__(ix)[self.label_ix]
+
+    ds = LabelOnlyDS(ds_core=ds, label_ix=label_ix)
     dl = torch.utils.data.DataLoader(ds, batch_size=batch_size, num_workers=num_workers)
 
     label_cache = set()
 
-    for batch in dl:
-        y = batch[label_index]
+    for y in dl:
         if extract_fn is not None:
             y = extract_fn(y)
 
