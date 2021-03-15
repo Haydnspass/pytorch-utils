@@ -48,7 +48,14 @@ class MultiMappedTensor(FileMappedTensor):
     def _load(self, pos) -> torch.Tensor:
         if isinstance(pos, int):
             pos = (pos, )
+            squeeze_batch_dim = True
         else:
             pos = torch.arange(len(self))[pos]
+            squeeze_batch_dim = False
 
-        return torch.stack([self._loader(self._files[k]) for k in pos], 0)
+        data = torch.stack([self._loader(self._files[k]) for k in pos], 0)
+
+        if squeeze_batch_dim:
+            return data.squeeze(0)
+        else:
+            return data

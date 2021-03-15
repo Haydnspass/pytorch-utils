@@ -26,7 +26,7 @@ def sample_pngs(tmpdir):
     img_dir.mkdir()
 
     for i in range(10):
-        plt.imsave(img_dir / f'sample_{i}.png', np.random.rand(32, 32, 3))
+        plt.imsave(img_dir / f'sample_{i}.png', np.random.rand(32, 40, 4))
 
     return img_dir
 
@@ -56,4 +56,10 @@ class TestMultiMappedTensor(TestFileMappedTensor):
 
     def test_len(self, tensor, sample_pngs):
         assert len(tensor) == len(list(sample_pngs.glob('*.png')))
+
+    def test_load(self, tensor):
+        super().test_load(tensor)
+
+        assert tensor._load(1).size() == torch.Size([32, 40, 4])
+        assert tensor._load(slice(1, 10, 2)).size() == torch.Size([5, 32, 40, 4])
 
