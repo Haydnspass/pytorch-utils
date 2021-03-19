@@ -1,3 +1,3 @@
 from . import plot
 
-from .plot import tshow
+from .plot import tshow, plot_bboxes
