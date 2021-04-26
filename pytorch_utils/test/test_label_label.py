@@ -42,7 +42,6 @@ def test_get_all_label_unequal():
             else:
                 return ['a', 'b']
 
-    ds = AdvancedLabelDS()
     y_out = label.get_all_labels(AdvancedLabelDS(), label_ix=None, num_workers=4)
 
     assert sorted(y_out) == ['a', 'b']

@@ -2,7 +2,6 @@ import collections
 import itertools
 import warnings
 
-from pytorch_utils import label
 from typing import Optional, Callable
 
 import torch
@@ -56,9 +55,9 @@ def get_all_labels(ds: torch.utils.data.Dataset, label_ix: int = 1,
 
         if numeric:
             assert isinstance(y, torch.LongTensor)
-            label_cache = label_cache | set(y.unique().tolist())
+            label_cache |= set(y.unique().tolist())
         else:
-            label_cache = label_cache | {yi for yi in itertools.chain(*y)}
+            label_cache |= {yi for yi in itertools.chain(*y)}
 
 
     if numeric:
