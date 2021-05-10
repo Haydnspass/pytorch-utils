@@ -86,3 +86,13 @@ def plot_keypoints(keypoints: torch.Tensor, graph: Optional[dict] = None, plot_i
             plt.text(kp[0], kp[1], ix_prefix + str(i))
 
     return ax
+
+
+class PlotKeypoints:
+    def __init__(self, graph, plot_ix: bool = True, ix_prefix: str = ''):
+        self.graph = graph
+        self.plot_ix = plot_ix
+        self.ix_prefix = ix_prefix
+
+    def plot(self, keypoints, ax=None):
+        plot_keypoints(keypoints, self.graph, plot_ix=self.plot_ix, ix_prefix=self.ix_prefix, ax=ax)
