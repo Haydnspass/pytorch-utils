@@ -5,6 +5,7 @@ import torch
 
 import pytorch_utils.plot.plot
 
+
 def test_tshow():
     x = torch.rand(3, 30, 32)
     xn = x.permute(1, 2, 0).clone().numpy()
@@ -18,3 +19,17 @@ def test_tshow():
 
     assert imshow_arg.size() == torch.Size([30, 32, 3])
     assert 'cmap' in imshow_kwargs.keys()
+
+
+def test_plot_keypoints():
+    x = torch.rand(5, 2)
+
+    graph = {
+        0: 1,
+        1: 3,
+        2: 3,
+        4: None,
+        5: None
+    }
+
+    pytorch_utils.plot.plot.plot_keypoints(x, graph, ax=None)
