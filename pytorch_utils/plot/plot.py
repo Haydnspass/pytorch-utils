@@ -74,6 +74,8 @@ def plot_keypoints(keypoints: torch.Tensor, graph: Optional[dict] = None, plot_i
     if ax is None:
         ax = plt.gca()
 
+    keypoints = keypoints.detach().cpu()
+
     if graph is not None:
         for k, v in graph.items():
             if v is not None:
