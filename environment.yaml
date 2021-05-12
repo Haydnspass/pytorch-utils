@@ -1,0 +1,11 @@
+name: pytorch_utils
+
+channels:
+  - pytorch
+  - conda-forge
+
+dependencies:
+  - pytest
+  - pytorch
+  - torchvision
+  - matplotlib
