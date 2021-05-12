@@ -57,6 +57,9 @@ class TestMultiMappedTensor(TestFileMappedTensor):
     def test_len(self, tensor, sample_pngs):
         assert len(tensor) == len(list(sample_pngs.glob('*.png')))
 
+    def test_size(self, tensor, sample_pngs):
+        assert tensor.size() == torch.Size([len(list(sample_pngs.glob('*.png'))), 32, 40, 4])
+
     def test_load(self, tensor):
         super().test_load(tensor)
 

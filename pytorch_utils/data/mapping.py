@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Union, Iterable, List, Tuple
+from typing import Union, Iterable, List, Tuple, Callable, Optional
 
 import torch
 
@@ -24,7 +24,7 @@ class FileMappedTensor(ABC):
 
         return self._load(pos[0])[pos[1:]]
 
-    def __setitem(self, key, value):
+    def __setitem__(self, key, value):
         raise NotImplementedError
 
     def __len__(self):
@@ -36,11 +36,23 @@ class FileMappedTensor(ABC):
 
 
 class MultiMappedTensor(FileMappedTensor):
-    def __init__(self, files: Union[list, tuple, dict], loader):
+    def __init__(self, files: Union[list, tuple, dict], loader: Callable):
+        """
+        Map multiple files to single pytorch tensor (e.g. a list of .png files).
+
+        Args:
+            files: paths
+            loader: callable that is able to load an individual file and returns a tensor
+
+        """
         super().__init__(file=None)
 
         self._files = files
         self._loader = loader
+
+    def size(self, dim: Optional[int] = None):
+        s = torch.Size([len(self), *self[0].size()])
+        return s[dim] if dim is not None else s
 
     def __len__(self):
         return len(self._files)
