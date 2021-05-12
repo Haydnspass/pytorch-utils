@@ -19,3 +19,20 @@ def test_view_to_dim_expct():
     # to few dims of x
     with pytest.raises(ValueError):
         lazy.tensor.view_to_dim(torch.rand(5, 4), 1, 0)
+
+
+def test_cycle_view():
+    @lazy.tensor.cycle_view(ndim=4, dim=0)
+    def func(x):
+        assert x.dim() == 4
+        return x
+
+    # unsqueeze - squeeze
+    x = torch.rand(10, 11)
+    out = func(x.clone())
+    assert (x == out).all()
+
+    # squeeze - unsqueeze
+    x = torch.rand(1, 1, 10, 11, 1)
+    out = func(x.clone())
+    assert (x == out).all()
