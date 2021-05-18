@@ -1,10 +1,13 @@
-import yaml
-import dill
-import torch.utils.data
 from pathlib import Path
 
+import dill
+import torch.utils.data
+import yaml
 
-class _DillDataset(torch.utils.data.Dataset):
+from tqdm import tqdm
+
+
+class _DillMappedDataset(torch.utils.data.Dataset):
     def __init__(self, file_list):
         self._file_list = file_list
 
@@ -14,6 +17,18 @@ class _DillDataset(torch.utils.data.Dataset):
     def __getitem__(self, item):
         with self._file_list[item].open('rb') as f:
             return dill.load(f)
+
+
+class _DillStaticDataset(_DillMappedDataset):
+    def __init__(self, file_list):
+        super().__init__(file_list)
+        self._cache = [
+            super(_DillStaticDataset, self).__getitem__(i)
+            for i in range(len(self))
+        ]
+
+    def __getitem__(self, item):
+        return self._cache[item]
 
 
 def dump_dataset(ds: torch.utils.data.Dataset, path):
@@ -28,7 +43,7 @@ def dump_dataset(ds: torch.utils.data.Dataset, path):
     path = Path(path) if not isinstance(path, Path) else path
     assert path.is_dir()
 
-    for i, sample in enumerate(ds):
+    for i, sample in tqdm(enumerate(ds), total=len(ds)):
         with (path / f'sample_{i}.dill').open('wb') as f:
             dill.dump(sample, file=f)
 
@@ -41,12 +56,13 @@ def dump_dataset(ds: torch.utils.data.Dataset, path):
         yaml.dump(meta, stream=f)
 
 
-def load_from_dump(path: Path) -> torch.utils.data.Dataset:
+def load_from_dump(path: Path, mode: str = 'mapped') -> torch.utils.data.Dataset:
     """
     Construct dataset from dumped one. Behaves like the original one.
 
     Args:
         path: directory of meta and samples
+        mode: 'mapped' or 'static' (ally) loaded
     """
     path = Path(path) if not isinstance(path, Path) else path
 
@@ -58,4 +74,9 @@ def load_from_dump(path: Path) -> torch.utils.data.Dataset:
     file_ext = meta['file_extension']
     file_list = [path / (f'{file_base}{i}{file_ext}') for i in range(meta['len'])]
 
-    return _DillDataset(file_list)
+    if mode == 'mapped':
+        return _DillMappedDataset(file_list)
+    elif mode == 'static':
+        return _DillStaticDataset(file_list)
+    else:
+        raise ValueError

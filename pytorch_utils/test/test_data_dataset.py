@@ -39,8 +39,9 @@ class TestDumpLoadDataset:
 
         assert meta['len'] == 5
 
-    def test_dump_load_dataset(self, ds_basic, tmpdir):
+    @pytest.mark.parametrize('mode', ['mapped', 'static'])
+    def test_dump_load_dataset(self, mode, ds_basic, tmpdir):
         ds_utils.dump_dataset(ds_basic, path=tmpdir)
-        ds_re = ds_utils.load_from_dump(tmpdir)
+        ds_re = ds_utils.load_from_dump(tmpdir, mode)
 
         assert _equal_ds(ds_basic, ds_re)
