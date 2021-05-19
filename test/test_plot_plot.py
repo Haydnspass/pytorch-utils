@@ -1,5 +1,6 @@
 import unittest.mock
 import matplotlib.pyplot as plt
+import pytest
 
 import torch
 
@@ -21,15 +22,18 @@ def test_tshow():
     assert 'cmap' in imshow_kwargs.keys()
 
 
+@pytest.mark.graphic
+@pytest.mark.manual
 def test_plot_keypoints():
     x = torch.rand(5, 2)
 
-    graph = {
-        0: 1,
-        1: 3,
-        2: 3,
-        4: None,
-        5: None
-    }
+    graph = [
+        (0, 1),
+        (1, 3),
+        (2, 3),
+        (4, None),
+        (5, None),
+    ]
 
     pytorch_utils.plot.plot.plot_keypoints(x, graph, ax=None)
+    plt.show()
