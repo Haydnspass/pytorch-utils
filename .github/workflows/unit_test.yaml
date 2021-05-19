@@ -31,4 +31,4 @@ jobs:
 
       # Run the specific test
       - run: |
-          pytest
+          python -m pytest -m "not graphic"
