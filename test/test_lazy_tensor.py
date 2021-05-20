@@ -27,6 +27,11 @@ def test_cycle_view():
         assert x.dim() == 4
         return x
 
+    @lazy.tensor.cycle_view(ndim=4, ndim_out=3, dim=0)
+    def reducer(x):
+        assert x.dim() == 4
+        return x[:, 1]
+
     # unsqueeze - squeeze
     x = torch.rand(10, 11)
     out = func(x.clone())
@@ -36,3 +41,6 @@ def test_cycle_view():
     x = torch.rand(1, 1, 10, 11, 1)
     out = func(x.clone())
     assert (x == out).all()
+
+    # test on reducing function (i.e. input ndim and target ndim are not the same)
+    assert reducer(torch.rand(2, 3, 4)).size() == torch.Size([1, 3, 4])
