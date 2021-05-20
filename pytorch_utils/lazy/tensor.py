@@ -26,19 +26,18 @@ def view_to_dim(x: torch.Tensor, ndim: int, dim: int, squeeze: bool = True, unsq
     return x
 
 
-def cycle_view(ndim: int, ndim_out: int = None, dim: int = 0, squeeze: bool = True, unsqueeze: bool\
-    = True):
+def cycle_view(ndim: int,
+               ndim_diff: int = 0, dim: int = 0, squeeze: bool = True, unsqueeze: bool = True):
     """
     Decorator that makes sure tensor to be of specific size, run through function (first argument)
-    and sizes single return output back to its original dimensionality or another target dim.
+    and sizes single return output back to its original dimensionality or a specified delta.
 
     Args:
         ndim: target dimension
-        ndim_out: target output dimension (set only if differs from original dimension)
+        ndim_diff: difference in target output dimension
         dim: which dimension to inflate / deflate
         squeeze: allow squeeze
         unsqueeze: allow unsqueeze
-
     """
     def decorator_cycle_view(func):
         @wraps(func)
@@ -48,7 +47,8 @@ def cycle_view(ndim: int, ndim_out: int = None, dim: int = 0, squeeze: bool = Tr
                     view_to_dim(x, ndim=ndim, dim=dim, squeeze=squeeze, unsqueeze=unsqueeze),
                     *args,
                     **kwargs
-                ), ndim=x.dim() if ndim_out is None else ndim_out,
+                ),
+                ndim=x.dim() + ndim_diff,
                 dim=dim,
                 squeeze=squeeze,
                 unsqueeze=unsqueeze
