@@ -43,7 +43,7 @@ def dump_dataset(ds: torch.utils.data.Dataset, path):
     path = Path(path) if not isinstance(path, Path) else path
     assert path.is_dir()
 
-    for i, sample in tqdm(enumerate(ds), total=len(ds)):
+    for i, sample in tqdm(enumerate(ds), total=len(ds), desc='Dumping Dataset'):
         with (path / f'sample_{i}.dill').open('wb') as f:
             dill.dump(sample, file=f)
 
