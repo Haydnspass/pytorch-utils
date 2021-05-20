@@ -31,7 +31,7 @@ def sample_pngs(tmpdir):
     return img_dir
 
 
-class TestFileMappedTensor(ABC):
+class _TestFileMappedTensor(ABC):
 
     def test_load(self, tensor):
 
@@ -46,7 +46,7 @@ class TestFileMappedTensor(ABC):
         assert isinstance(tensor[1:5, 10:20, 5:30], torch.Tensor), "Failed on sliced index followed by slice"
 
 
-class TestMultiMappedTensor(TestFileMappedTensor):
+class TestMultiMappedTensor(_TestFileMappedTensor):
     @pytest.fixture()
     def tensor(self, sample_pngs):
         def loader(f):
