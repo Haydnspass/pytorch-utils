@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 
 import torch
 import matplotlib as mpl
@@ -70,14 +70,15 @@ def plot_bboxes(boxes: torch.Tensor, scores: Optional[torch.Tensor] = None, box_
     return ax
 
 
-def plot_keypoints(keypoints: torch.Tensor, graph: Optional[dict] = None, plot_ix=True, ix_prefix: str = '', ax=None):
+def plot_keypoints(keypoints: torch.Tensor, graph: Optional[List[tuple]] = None, plot_ix=True,
+                   ix_prefix: str = '', ax=None):
     if ax is None:
         ax = plt.gca()
 
     keypoints = keypoints.detach().cpu()
 
     if graph is not None:
-        for k, v in graph.items():
+        for k, v in graph:
             if v is not None:
                 ax.plot(keypoints[[k, v], 0], keypoints[[k, v], 1], 'blue')
 
@@ -85,7 +86,7 @@ def plot_keypoints(keypoints: torch.Tensor, graph: Optional[dict] = None, plot_i
 
     if plot_ix:
         for i, kp in enumerate(keypoints):
-            plt.text(kp[0], kp[1], ix_prefix + str(i))
+            ax.text(kp[0], kp[1], ix_prefix + str(i))
 
     return ax
 
