@@ -97,5 +97,8 @@ class PlotKeypoints:
         self.plot_ix = plot_ix
         self.ix_prefix = ix_prefix
 
+    def __call__(self, *args, **kwargs):
+        return self.plot(*args, **kwargs)
+
     def plot(self, keypoints, ax=None):
         plot_keypoints(keypoints, self.graph, plot_ix=self.plot_ix, ix_prefix=self.ix_prefix, ax=ax)
