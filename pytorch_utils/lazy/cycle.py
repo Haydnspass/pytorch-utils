@@ -64,7 +64,12 @@ def torch_np_cycle(arg: Optional[int] = 0, return_arg: Optional[int] = 0):
     return cycle(to_np, torch.from_numpy, arg, return_arg)
 
 
-def dict_dot_cycle(arg: Optional[int] = 0, return_arg: Optional[int] = 0):
+def _from_dict(x: dict) -> SimpleNamespace:
+    return SimpleNamespace(**x)
+
+
+def dict_dot_cycle(arg: Optional[int] = 0, return_arg: Optional[int] = 0,
+                   convert_back: bool = True):
     """
     Decorator that changes a dictionary type argument to dot notation
     (via SimpleNamespace) and back.
@@ -72,9 +77,10 @@ def dict_dot_cycle(arg: Optional[int] = 0, return_arg: Optional[int] = 0):
     Args:
         arg: index of argument
         return_arg: index of return argument or None for whole
+        convert_back: convert back to dict
 
     """
-    def _from_dict(x):
-        return SimpleNamespace(**x)
-
-    return cycle(_from_dict, vars, arg, return_arg)
+    if convert_back:
+        return cycle(_from_dict, vars, arg, return_arg)
+    else:
+        return cycle(_from_dict, None, arg, None)

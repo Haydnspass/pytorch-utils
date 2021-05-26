@@ -43,3 +43,4 @@ def test_dict_dot_cycle():
         return x
 
     assert cycle.dict_dot_cycle(0, None)(dummy)({'a': 42}) == {'a': 42}
+    assert cycle.dict_dot_cycle(0, None, False)(dummy)({'a': 42}).a == 42
