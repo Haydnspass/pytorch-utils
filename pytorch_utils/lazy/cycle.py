@@ -2,6 +2,7 @@
 Transform, do something, transform it back.
 """
 import functools
+from types import SimpleNamespace
 from typing import Optional, Callable
 
 import torch
@@ -55,9 +56,25 @@ def cycle(trafo_a: Optional[Callable], trafo_b: Optional[Callable],
 def torch_np_cycle(arg: Optional[int] = 0, return_arg: Optional[int] = 0):
     """
     Decorator for numpy only functions that converts a tensor to np.ndarray,
-    exectues function and converts it back.
+    executes function and converts it back.
     """
     def to_np(x):
         return x.numpy()
 
     return cycle(to_np, torch.from_numpy, arg, return_arg)
+
+
+def dict_dot_cycle(arg: Optional[int] = 0, return_arg: Optional[int] = 0):
+    """
+    Decorator that changes a dictionary type argument to dot notation
+    (via SimpleNamespace) and back.
+
+    Args:
+        arg: index of argument
+        return_arg: index of return argument or None for whole
+
+    """
+    def _from_dict(x):
+        return SimpleNamespace(**x)
+
+    return cycle(_from_dict, vars, arg, return_arg)

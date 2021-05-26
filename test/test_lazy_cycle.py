@@ -36,3 +36,10 @@ def test_torch_cycle():
 
     assert isinstance(cycle.torch_np_cycle(0, 0)(numpy_only_func)(torch.rand(5, 5)), torch.Tensor)
 
+
+def test_dict_dot_cycle():
+    def dummy(x):
+        assert x.a == 42
+        return x
+
+    assert cycle.dict_dot_cycle(0, None)(dummy)({'a': 42}) == {'a': 42}
