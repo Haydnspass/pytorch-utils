@@ -3,7 +3,7 @@ Transform, do something, transform it back.
 """
 import functools
 from types import SimpleNamespace
-from typing import Optional, Callable
+from typing import Optional, Callable, Union
 
 import torch
 
@@ -64,8 +64,11 @@ def torch_np_cycle(arg: Optional[int] = 0, return_arg: Optional[int] = 0):
     return cycle(to_np, torch.from_numpy, arg, return_arg)
 
 
-def _from_dict(x: dict) -> SimpleNamespace:
-    return SimpleNamespace(**x)
+def _from_dict(x: Union[dict, SimpleNamespace]) -> SimpleNamespace:
+    if isinstance(x, dict):
+        return SimpleNamespace(**x)
+    else:
+        return x
 
 
 def dict_dot_cycle(arg: Optional[int] = 0, return_arg: Optional[int] = 0,
@@ -80,6 +83,7 @@ def dict_dot_cycle(arg: Optional[int] = 0, return_arg: Optional[int] = 0,
         convert_back: convert back to dict
 
     """
+
     if convert_back:
         return cycle(_from_dict, vars, arg, return_arg)
     else:
