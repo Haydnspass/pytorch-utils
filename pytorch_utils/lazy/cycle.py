@@ -10,15 +10,19 @@ import torch
 def cycle(trafo_a: Optional[Callable], trafo_b: Optional[Callable],
           arg: Optional[int] = 0, return_arg: Optional[int] = 0):
     """
+    Decorator. Applies an input transformation to a specific input argument
+    (if specified) and an output transformation (if specified) to the output or
+    one of the outputs if a tuple is returned (i.e. mostly multiple outputs).
 
     Args:
-        trafo_a: must be inplace
-        trafo_b: must be inplace
-        arg: which argument should be modified
-        return_arg: which return argument should be modified
+        trafo_a: input transformation
+        trafo_b: output transformation
+        arg: index of the input argument which argument should be modified
+        return_arg: None if output transformation should be applied to the whole
+         output or index of the output argument that should be modified
 
     Returns:
-
+        decorated function
     """
 
     def decorator_cycle(func):
@@ -35,7 +39,7 @@ def cycle(trafo_a: Optional[Callable], trafo_b: Optional[Callable],
             if trafo_b is None:
                 return out
 
-            elif not isinstance(out, tuple):
+            if not isinstance(out, tuple) or return_arg is None:
                 return trafo_b(out)
 
             else:
