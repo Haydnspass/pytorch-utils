@@ -3,12 +3,17 @@ import torch
 
 def convert_bbox(box: torch.Tensor, mode_in: str, mode_out: str) -> torch.Tensor:
     """
-    Convert bounding boxes in format N x 4 between xyxy and xywh formats.
+    Convert bounding boxes in format N x 4 between xyxy, xywh, cxcywh formats.
+
+    Formats:
+        xyxy: upper left, lower right corner
+        xywh: upper left, width and height
+        cxcywh: center x/y, width and height
 
     Args:
         box: input boxes
-        mode_in: xyxy or xywh
-        mode_out: xyxy or xywh
+        mode_in: xyxy or xywh or cxcywh
+        mode_out: xyxy or xywh or cxcywh
 
     """
     if mode_in == mode_out:
@@ -29,10 +34,14 @@ def _bbox_arbitrary_to_xyxy(box: torch.Tensor, mode: str) -> torch.Tensor:
     box_out = box.clone()
     if mode == 'xywh':
         box_out[:, 2:] = box[:, :2] + box[:, 2:]
+    elif mode == 'cxcywh':
+        box_out[:, :2] -= box_out[:, 2:] / 2
+        return _bbox_arbitrary_to_xyxy(box_out, 'xywh')
     else:
         raise NotImplementedError
 
     return box_out
+
 
 def _bbox_xyxy_to_arbitrary(box: torch.Tensor, mode: str) -> torch.Tensor:
 

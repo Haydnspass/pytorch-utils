@@ -28,6 +28,7 @@ def test_convert_bbox(mode_in, mode_out):
 @pytest.mark.parametrize("box,mode,box_expct", [
     (torch.Tensor([[1., 2., 3., 4.]]), 'xyxy', torch.Tensor([[1., 2., 3., 4.]])),
     (torch.Tensor([[1., 2., 3., 4.]]), 'xywh', torch.Tensor([[1., 2., 4., 6.]])),
+    (torch.Tensor([[1., 2., 3., 4.]]), 'cxcywh', torch.Tensor([[-.5, 0, 2.5, 4.]])),
 ])
 def test__bbox_arbitrary_to_xyxy(box, mode, box_expct):
 
