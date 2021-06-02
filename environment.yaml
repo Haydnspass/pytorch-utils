@@ -13,3 +13,6 @@ dependencies:
   - tqdm
   - pyyaml
   - scikit-learn
+
+  # developer
+  - bump2version

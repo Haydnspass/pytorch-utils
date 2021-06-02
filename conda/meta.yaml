@@ -1,0 +1,40 @@
+package:
+  name: pytorch_utils
+  version: "0.1.0dev1"  # DO NOT MODIFY BY HAND; see DEVELOPER.md
+
+source:
+     - path: ..
+
+build:
+  noarch: python
+  number: 0
+  script: python -m pip install --no-deps --ignore-installed .
+
+requirements:
+  host:
+    - python >=3.7
+    - pip
+
+  run:
+    - python >=3.8,<3.10
+    - dill
+    - pytorch
+    - torchvision
+    - matplotlib
+    - tqdm
+    - pyyaml
+    - scikit-learn
+
+  test:
+    source_files:
+      - test
+    requires:
+      - pytest
+    imports:  # Note: seems to be bugged in conda-build
+      - pytorch_utils
+    commands:
+      - python -m pytest -m "not graphic"
+
+
+about:
+    summary: "Some deep learning utils mainly around pytorch."
