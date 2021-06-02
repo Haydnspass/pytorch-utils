@@ -74,7 +74,7 @@ class MultiMappedTensor(FileMappedTensor):
 
 
 class Delayed:
-    def __init__(self, tensors: Iterable[Union[MultiMappedTensor, torch.Tensor]], fn: Callable):
+    def __init__(self, tensors: List[Union[MultiMappedTensor, torch.Tensor]], fn: Callable):
         """
         Delays a function that operates on (most interestingly) mapped tensors.
         For example you have two mapped tensors a (size Nx2xHxW), b (size Nx3xHxW)
@@ -91,6 +91,9 @@ class Delayed:
         """
         self._tensors = tensors
         self._fn = fn
+
+    def __len__(self) -> int:
+        return len(self._tensors[0])
 
     def __getitem__(self, pos) -> torch.Tensor:
         # the following is because inside we always need the batch dimension, otherwise
