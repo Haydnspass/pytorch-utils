@@ -80,6 +80,7 @@ class Delayed:
         For example you have two mapped tensors a (size Nx2xHxW), b (size Nx3xHxW)
         which should be concatenated such that the result is Nx5xHxW but a and b
         do not fit into memory.
+        The function must assume that it always gets the batch-dimension, it can be singular though.
 
         Warning:
             The (delayed) function must not operate on the batch dimension
@@ -92,4 +93,16 @@ class Delayed:
         self._fn = fn
 
     def __getitem__(self, pos) -> torch.Tensor:
-        return self._fn(*[t[pos] for t in self._tensors])
+        # the following is because inside we always need the batch dimension, otherwise
+        # the function would need to differentiate between getting 2 variants
+        if isinstance(pos, int):
+            pos = [pos]
+            squeeze_batch_dim = True
+        else:
+            squeeze_batch_dim = False
+
+        out = self._fn(*[t[pos] for t in self._tensors])
+        if squeeze_batch_dim:
+            return out.squeeze(0)
+
+        return out

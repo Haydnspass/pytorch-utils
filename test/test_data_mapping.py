@@ -68,18 +68,26 @@ class TestMultiMappedTensor(_TestFileMappedTensor):
         assert tensor._load(slice(1, 10, 2)).size() == torch.Size([5, 32, 40, 4])
 
 
-@pytest.mark.parametrize("fn", [
-    lambda a, b: torch.cat([a, b], dim=1),
-    lambda a, b: torch.add(a, b)
+@pytest.mark.parametrize("x,y,fn", [
+    (torch.rand(20, 3, 40, 32), torch.rand(20, 2, 40, 32), lambda a, b: torch.cat([a, b], dim=1)),
+    (torch.rand(20, 3, 40, 32), torch.rand(20, 3, 40, 32), lambda a, b: torch.add(a, b)),
 ])
-def test_delayed(fn):
-    x = torch.rand(2, 3, 32, 32)
-    y = torch.rand(2, 3, 32, 32)
-    expct = fn(x, y)
+def test_delayed(x, y, fn):
 
+    expct = fn(x, y)
     cat_delayed = mapping.Delayed([x, y], fn)
 
     numpy.testing.assert_array_almost_equal(
         cat_delayed[:].numpy(),
-        expct.numpy()
+        expct[:].numpy()
+    )
+
+    numpy.testing.assert_array_almost_equal(
+        cat_delayed[0].numpy(),
+        expct[0].numpy()
+    )
+
+    numpy.testing.assert_array_almost_equal(
+        cat_delayed[5:10].numpy(),
+        expct[5:10].numpy()
     )
