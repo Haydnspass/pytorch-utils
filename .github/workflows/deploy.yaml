@@ -22,11 +22,11 @@ jobs:
         $CONDA/bin/conda install conda-build anaconda-client
 
     # build, then also store the file paths that were built
-    - name: Build DECODE
+    - name: Build pytorch_utils
       run: |
         cd ./conda
-        $CONDA/bin/conda-build -c pytorch -c conda-forge conda
-        $CONDA/bin/conda-build -c pytorch -c conda-forge conda --output > $FILENAMES
+        $CONDA/bin/conda-build -c pytorch -c conda-forge .
+        $CONDA/bin/conda-build -c pytorch -c conda-forge . --output > $FILENAMES
 
     - name: Change anaconda label on release
       if: github.event.release
