@@ -3,6 +3,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+import numpy.testing
 import pytest
 import torch
 
@@ -66,3 +67,19 @@ class TestMultiMappedTensor(_TestFileMappedTensor):
         assert tensor._load(1).size() == torch.Size([32, 40, 4])
         assert tensor._load(slice(1, 10, 2)).size() == torch.Size([5, 32, 40, 4])
 
+
+@pytest.mark.parametrize("fn", [
+    lambda a, b: torch.cat([a, b], dim=1),
+    lambda a, b: torch.add(a, b)
+])
+def test_delayed(fn):
+    x = torch.rand(2, 3, 32, 32)
+    y = torch.rand(2, 3, 32, 32)
+    expct = fn(x, y)
+
+    cat_delayed = mapping.Delayed([x, y], fn)
+
+    numpy.testing.assert_array_almost_equal(
+        cat_delayed[:].numpy(),
+        expct.numpy()
+    )

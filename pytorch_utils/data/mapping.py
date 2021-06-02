@@ -71,3 +71,25 @@ class MultiMappedTensor(FileMappedTensor):
             return data.squeeze(0)
         else:
             return data
+
+
+class Delayed:
+    def __init__(self, tensors: Iterable[Union[MultiMappedTensor, torch.Tensor]], fn: Callable):
+        """
+        Delays a function that operates on (most interestingly) mapped tensors.
+        For example you have two mapped tensors a (size Nx2xHxW), b (size Nx3xHxW)
+        which should be concatenated such that the result is Nx5xHxW but a and b
+        do not fit into memory.
+
+        Warning:
+            The (delayed) function must not operate on the batch dimension
+
+        Args:
+            tensors: iterable of tensors
+            fn: delayed function
+        """
+        self._tensors = tensors
+        self._fn = fn
+
+    def __getitem__(self, pos) -> torch.Tensor:
+        return self._fn(*[t[pos] for t in self._tensors])
