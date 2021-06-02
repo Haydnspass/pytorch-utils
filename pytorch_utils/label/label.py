@@ -62,7 +62,6 @@ def get_all_labels(ds: torch.utils.data.Dataset, label_ix: int = 1,
         else:
             label_cache |= {yi for yi in itertools.chain(*y)}
 
-
     if numeric:
         label_cache = torch.LongTensor(list(label_cache))
 
