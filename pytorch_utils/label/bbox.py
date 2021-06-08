@@ -35,8 +35,8 @@ def limit_bbox_to_img(box, img_size: torch.Size, mode='xyxy'):
     if (shift_min * shift_max).any():
         raise ValueError("Bounding box can not be limited to image size. There is at least one shift in opposing directions.")
 
-    box_xyxy[:, [0, 2]] += shift_min
-    box_xyxy[:, [1, 3]] += shift_max
+    box_xyxy -= shift_min.repeat(1, 2)
+    box_xyxy -= shift_max.repeat(1, 2)
 
     return convert_bbox(box_xyxy, 'xyxy', mode)
 
