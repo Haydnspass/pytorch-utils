@@ -27,12 +27,17 @@ def test_convert_bbox(mode_in, mode_out):
 
 @pytest.mark.parametrize("box,box_expct", [
     (torch.Tensor([[-5., -10, 3, 7]]), torch.Tensor([[0., 0., 8, 17]])),
-    (torch.Tensor([[10., 20., 37, 41]]), torch.Tensor([[4., 18., 31., 39.]]))
+    (torch.Tensor([[10., 20., 37, 41]]), torch.Tensor([[4., 18., 31., 39.]])),
+    (torch.Tensor([[0., 0., 40., 48]]), 'err'),
 ])
 def test_limit_bbox_to_img(box, box_expct):
-    box_out = bbox.limit_bbox_to_img(box, torch.Size([32, 40]), 'xyxy')
+    if box_expct == 'err':
+        with pytest.raises(ValueError):
+            bbox.limit_bbox_to_img(box, torch.Size([32, 40]), 'xyxy')
 
-    assert (box_out == box_expct).all()
+    else:
+        box_out = bbox.limit_bbox_to_img(box, torch.Size([32, 40]), 'xyxy')
+        assert (box_out == box_expct).all()
 
 
 @pytest.mark.parametrize("box,mode,box_expct", [

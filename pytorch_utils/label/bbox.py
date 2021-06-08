@@ -32,13 +32,15 @@ def limit_bbox_to_img(box, img_size: torch.Size, mode='xyxy'):
     shift_min = box[:, :2] - torch.max(box_xyxy[:, :2], torch.zeros_like(box_xyxy[:, :2]))
     shift_max = box[:, 2:] - torch.min(box_xyxy[:, 2:], torch.tensor(list(img_size)) - 1)
 
-    if (shift_min * shift_max).any():
-        raise ValueError("Bounding box can not be limited to image size. There is at least one shift in opposing directions.")
-
     box_xyxy -= shift_min.repeat(1, 2)
     box_xyxy -= shift_max.repeat(1, 2)
 
-    return convert_bbox(box_xyxy, 'xyxy', mode)
+    box_out = convert_bbox(box_xyxy, 'xyxy', mode)
+
+    if (box_out.min() < 0).any() or (box_out[:, 2:] > torch.tensor(list(img_size)) - 1).any():
+        raise ValueError
+
+    return box_out
 
 
 def _bbox_arbitrary_to_xyxy(box: torch.Tensor, mode: str) -> torch.Tensor:
