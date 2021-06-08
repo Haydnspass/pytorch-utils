@@ -71,6 +71,17 @@ def torch_np_cycle(arg: Optional[Union[int, str]] = 0, return_arg: Optional[int]
     return cycle(to_np, torch.from_numpy, arg, return_arg)
 
 
+def torch_list_cycle(arg: Optional[Union[int, str]] = 0, return_arg: Optional[int] = 0):
+    """
+    Decorator for functions that only take lists. Converts a tensor to list,
+    executes function and converts it back.
+    """
+    def to_list(x):
+        return x.tolist()
+
+    return cycle(to_list, torch.Tensor, arg, return_arg)
+
+
 def _from_dict(x: Union[dict, SimpleNamespace]) -> SimpleNamespace:
     if isinstance(x, dict):
         return SimpleNamespace(**x)

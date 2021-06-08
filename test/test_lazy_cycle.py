@@ -38,12 +38,20 @@ def test_cycle_on_tuple_return():
     assert cycle.cycle(trafo_a, trafo_b, return_arg=None)(minimal)([10]) == [10, 10]
 
 
-def test_torch_cycle():
+def test_torch_np_cycle():
     def numpy_only_func(x):
         assert isinstance(x, np.ndarray)
         return x
 
     assert isinstance(cycle.torch_np_cycle(0, 0)(numpy_only_func)(torch.rand(5, 5)), torch.Tensor)
+
+
+def test_torch_list_cycle():
+    def list_only_func(x):
+        assert isinstance(x, list)
+        return x
+
+    assert isinstance(cycle.torch_list_cycle(0, 0)(list_only_func)(torch.rand(5, 5)), torch.Tensor)
 
 
 def test_dict_dot_cycle():
