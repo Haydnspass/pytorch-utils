@@ -1,7 +1,6 @@
 import pytest
 import torch
 import numpy as np
-import sklearn
 
 from pytorch_utils.lazy import cycle
 
@@ -16,6 +15,16 @@ def test_cycle_minimal():
     assert cycle.cycle(trafo_a, trafo_b, 0, 0)(minimal)(5) == pytest.approx(50**0.5, 1e-8)
     assert cycle.cycle(None, trafo_b, None, 0)(minimal)(5) == pytest.approx(10 ** 0.5, 1e-8)
     assert cycle.cycle(trafo_a, None, 0, None)(minimal)(5) == pytest.approx(50., 1e-8)
+
+
+def test_cycle_kwargs():
+    def minimal(*, x, y, z):
+        return x + y * z
+
+    trafo_a = lambda x: x ** 2
+    trafo_b = lambda x: x ** 4
+
+    assert cycle.cycle(trafo_a, trafo_b, 'z', 0)(minimal)(x=5, y=6, z=7) == pytest.approx((5 + 6 * 7**2)**4, 1e-8)
 
 
 def test_cycle_on_tuple_return():
