@@ -39,7 +39,7 @@ jobs:
         echo "ANACONDA_LABEL=rc" >> $GITHUB_ENV
 
     - name: Upload to Anaconda Cloud
-      if: ${{ github.event.release || github.ref == 'refs/heads/master' }}
+      if: ${{ github.event.release }}
       env:
         ANACONDA_TOKEN: ${{ secrets.HAYDNSPASS_ANACONDA_TOKEN }}
       run: |
