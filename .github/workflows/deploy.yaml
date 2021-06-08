@@ -43,6 +43,7 @@ jobs:
       env:
         ANACONDA_TOKEN: ${{ secrets.HAYDNSPASS_ANACONDA_TOKEN }}
       run: |
+        set -x
         cd ./conda
         while read PATH; do
           $CONDA/bin/anaconda -t $ANACONDA_TOKEN upload --force -l ${{ env.ANACONDA_LABEL }} -u haydnspass $PATH
