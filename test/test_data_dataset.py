@@ -27,11 +27,19 @@ class TestDumpLoadDataset:
         )
         return ds
 
-    def test_dump_dataset(self, ds_basic, tmpdir):
+    @pytest.mark.parametrize('dump_fn', ['torch', 'dill'])
+    def test_dump_dataset(self, dump_fn, ds_basic, tmpdir):
         # basic
-        ds_utils.dump_dataset(ds_basic, path=tmpdir)
+        ds_utils.dump_dataset(ds_basic, path=tmpdir, dump_fn=dump_fn)
 
-        assert len(list(Path(tmpdir).glob('*.dill'))) == 5
+        if dump_fn == 'dill':
+            pttrn = '*.dill'
+        elif dump_fn == 'torch':
+            pttrn = '*.pt'
+        else:
+            raise ValueError
+
+        assert len(list(Path(tmpdir).glob(pttrn))) == 5
 
         # meta
         with (Path(tmpdir) / 'meta.yaml').open('r') as f:
@@ -39,9 +47,10 @@ class TestDumpLoadDataset:
 
         assert meta['len'] == 5
 
+    @pytest.mark.parametrize('dump_fn', ['torch', 'dill'])
     @pytest.mark.parametrize('mode', ['mapped', 'static'])
-    def test_dump_load_dataset(self, mode, ds_basic, tmpdir):
-        ds_utils.dump_dataset(ds_basic, path=tmpdir)
+    def test_dump_load_dataset(self, dump_fn, mode, ds_basic, tmpdir):
+        ds_utils.dump_dataset(ds_basic, path=tmpdir, dump_fn=dump_fn)
         ds_re = ds_utils.load_from_dump(tmpdir, mode)
 
         assert _equal_ds(ds_basic, ds_re)
