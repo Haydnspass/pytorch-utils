@@ -1,3 +1,5 @@
+from unittest import mock
+
 import pytest
 import torch
 
@@ -44,3 +46,20 @@ def test_cycle_view():
 
     # test on reducing function (i.e. input ndim and target ndim are not the same)
     assert reducer(torch.rand(2, 3, 4)).size() == torch.Size([3, 4])
+
+
+@pytest.mark.parametrize("p_in,p_expct", [
+    ([0, 1, 2], [0, 1, 2]),  # identity
+    ([0, 2, 1], [0, 2, 1]),  # swap last 2
+    ([-3, -2, 1], [0, 1, 2]),  # identity with neg. ix
+    ([0, -1, -2], [0, 2, 1]),  # swap last 2
+])
+def test_invert_permutation(p_in, p_expct):
+    assert lazy.tensor.invert_permutation(*p_in) == p_expct
+
+    # test alias function
+    with mock.patch.object(torch.Tensor, "permute") as mock_permute:
+        lazy.tensor.inverse_permute(torch.rand(2, 3, 4), p_in)
+
+    mock_permute.assert_called_once_with(*p_expct)
+

@@ -1,4 +1,5 @@
 from functools import wraps
+from typing import List
 
 import torch
 
@@ -55,3 +56,18 @@ def cycle_view(ndim: int,
             )
         return wrapper_cycle_view
     return decorator_cycle_view
+
+
+def invert_permutation(*dims: int) -> List[int]:
+    """
+    Inverts a permutation defined by integer indices. Even if the indices are (partly) negative,
+    the result will always be an equivalent positive set of indices.
+    """
+    n = len(dims)
+    dims = [d if d >= 0 else d + n for d in dims]
+    return torch.argsort(torch.LongTensor(dims)).tolist()
+
+
+def inverse_permute(t: torch.Tensor, dims):
+    """Convenience function to invert a known permutation on a tensor."""
+    return t.permute(*invert_permutation(*dims))
