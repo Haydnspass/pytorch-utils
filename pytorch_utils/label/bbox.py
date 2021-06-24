@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import torch
 
 
@@ -41,6 +43,15 @@ def limit_bbox_to_img(box, img_size: torch.Size, mode='xyxy'):
         raise ValueError
 
     return box_out
+
+
+def resize_boxes(box, wh: Tuple[float, float], mode: str = 'xyxy'):
+    """Resize boxes to a specific size."""
+    box_cxywh = convert_bbox(box, mode, 'cxcywh')
+    box_cxywh[:, 2] = wh[0]
+    box_cxywh[:, 3] = wh[1]
+
+    return convert_bbox(box_cxywh, 'cxcywh', mode)
 
 
 def _bbox_arbitrary_to_xyxy(box: torch.Tensor, mode: str) -> torch.Tensor:

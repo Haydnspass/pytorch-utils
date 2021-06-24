@@ -40,6 +40,13 @@ def test_limit_bbox_to_img(box, box_expct):
         assert (box_out == box_expct).all()
 
 
+def test_resize_bbox():
+    box = torch.Tensor([[-20, -30, 20, 30]])
+
+    box_out = bbox.resize_boxes(box, (50, 20), 'xyxy')
+    assert (box_out == torch.Tensor([-25, -10, 25, 10])).all()
+
+
 @pytest.mark.parametrize("box,mode,box_expct", [
     (torch.Tensor([[1., 2., 3., 4.]]), 'xyxy', torch.Tensor([[1., 2., 3., 4.]])),
     (torch.Tensor([[1., 2., 3., 4.]]), 'xywh', torch.Tensor([[1., 2., 4., 6.]])),
