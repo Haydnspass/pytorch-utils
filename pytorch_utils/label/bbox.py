@@ -2,10 +2,12 @@ from typing import Tuple
 
 import torch
 
+import pytorch_utils.lazy.tensor
+
 
 def convert_bbox(box: torch.Tensor, mode_in: str, mode_out: str) -> torch.Tensor:
     """
-    Convert bounding boxes in format N x 4 between xyxy, xywh, cxcywh formats.
+    Convert bounding boxes in format (N x )4 between xyxy, xywh, cxcywh formats.
 
     Formats:
         xyxy: upper left, lower right corner
@@ -45,6 +47,7 @@ def limit_bbox_to_img(box, img_size: torch.Size, mode='xyxy'):
     return box_out
 
 
+@pytorch_utils.lazy.tensor.cycle_view(2, 0)
 def resize_boxes(box, wh: Tuple[float, float], mode: str = 'xyxy'):
     """Resize boxes to a specific size."""
     box_cxywh = convert_bbox(box, mode, 'cxcywh')
@@ -54,6 +57,7 @@ def resize_boxes(box, wh: Tuple[float, float], mode: str = 'xyxy'):
     return convert_bbox(box_cxywh, 'cxcywh', mode)
 
 
+@pytorch_utils.lazy.tensor.cycle_view(2, 0)
 def _bbox_arbitrary_to_xyxy(box: torch.Tensor, mode: str) -> torch.Tensor:
 
     if mode == 'xyxy':
@@ -61,9 +65,9 @@ def _bbox_arbitrary_to_xyxy(box: torch.Tensor, mode: str) -> torch.Tensor:
 
     box_out = box.clone()
     if mode == 'xywh':
-        box_out[:, 2:] = box[:, :2] + box[:, 2:]
+        box_out[..., 2:] = box[..., :2] + box[..., 2:]
     elif mode == 'cxcywh':
-        box_out[:, :2] -= box_out[:, 2:] / 2
+        box_out[..., :2] -= box_out[..., 2:] / 2
         return _bbox_arbitrary_to_xyxy(box_out, 'xywh')
     else:
         raise NotImplementedError
@@ -71,6 +75,7 @@ def _bbox_arbitrary_to_xyxy(box: torch.Tensor, mode: str) -> torch.Tensor:
     return box_out
 
 
+@pytorch_utils.lazy.tensor.cycle_view(2, 0)
 def _bbox_xyxy_to_arbitrary(box: torch.Tensor, mode: str) -> torch.Tensor:
 
     if mode == 'xyxy':
@@ -78,12 +83,12 @@ def _bbox_xyxy_to_arbitrary(box: torch.Tensor, mode: str) -> torch.Tensor:
 
     box_out = box.clone()
     if mode == 'xywh':
-        box_out[:, 2:] = box[:, 2:] - box[:, :2]
+        box_out[..., 2:] = box[:, 2:] - box[:, :2]
     elif mode == 'cxcywh':
         # nice little recursion
         box_xywh = _bbox_xyxy_to_arbitrary(box, mode='xywh')
-        box_out[:, :2] = (box[:, :2] + box[:, 2:]) / 2
-        box_out[:, 2:] = box_xywh[:, 2:]
+        box_out[..., :2] = (box[..., :2] + box[..., 2:]) / 2
+        box_out[..., 2:] = box_xywh[:, 2:]
     else:
         raise NotImplementedError
 

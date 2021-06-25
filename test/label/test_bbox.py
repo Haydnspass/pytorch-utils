@@ -67,3 +67,12 @@ def test__bbox_xyxy_to_arbitrary(box, mode, box_expct):
 
     box_out = bbox._bbox_xyxy_to_arbitrary(box, mode=mode)
     assert (box_out == box_expct).all()
+
+
+def test_auto_inflate():
+
+    box = torch.Tensor([1., 2., 3., 4.])  # 1D box
+
+    bbox._bbox_arbitrary_to_xyxy(box, mode='xywh')
+    bbox._bbox_xyxy_to_arbitrary(box, mode='xywh')
+    bbox.resize_boxes(box, (10, 10))
