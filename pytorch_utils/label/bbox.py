@@ -57,6 +57,17 @@ def resize_boxes(box, wh: Tuple[float, float], mode: str = 'xyxy'):
     return convert_bbox(box_cxywh, 'cxcywh', mode)
 
 
+def square_boxes(box, mode: str = 'xyxy'):
+    if not box.dim() == 1:
+        raise ValueError("Square boxes currently only supported for a single box.")
+
+    box_cxywh = convert_bbox(box, mode, 'cxcywh')
+    wh_max = box_cxywh[2:].max().item()
+    box_aug_cxywh = resize_boxes(box_cxywh, (wh_max, wh_max), mode='cxcywh')
+
+    return convert_bbox(box_aug_cxywh, mode_in='cxcywh', mode_out=mode)
+
+
 @pytorch_utils.lazy.tensor.cycle_view(2, 0)
 def _bbox_arbitrary_to_xyxy(box: torch.Tensor, mode: str) -> torch.Tensor:
 
