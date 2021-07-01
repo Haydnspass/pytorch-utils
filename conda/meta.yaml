@@ -18,7 +18,7 @@ requirements:
   run:
     - python >=3.8,<3.10
     - dill
-    - pytorch
+    - pytorch >=1.7.1
     - torchvision
     - matplotlib
     - tqdm
