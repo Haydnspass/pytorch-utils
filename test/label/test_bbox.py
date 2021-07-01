@@ -25,18 +25,54 @@ def test_convert_bbox(mode_in, mode_out):
         arb_to_xyxy.assert_called()
 
 
+@pytest.mark.parametrize("box,expct", [
+    (torch.Tensor([10, 20, 30, 40]), None),
+    (torch.Tensor([[10, 20, 10, 40]]), 'At least one bounding box has width or height 0.')
+])
+def test_check_box(box, expct):
+    if expct is None:
+        bbox.check_bbox(box)
+        return
+
+    with pytest.raises(ValueError) as err:
+        bbox.check_bbox(box)
+
+    assert str(err.value) == expct
+
+
+@pytest.mark.parametrize("box,box_expct", [
+    (torch.Tensor([[-5., -10, 3, 7]]), torch.Tensor([[0., 0., 3, 7]])),
+    (torch.Tensor([[0., 0., 31.99, 39.99]]), torch.Tensor([[0., 0., 31.99, 39.99]])),
+    (torch.Tensor([-5, -1, 100, 200]), torch.Tensor([0., 0., 32 - 1e-6, 40 - 1e-6])),
+    (torch.Tensor([[-5, 2, -1, 7]]), 'err'),
+    (torch.Tensor([[100, 200, 300, 400]]), 'err'),
+])
+def test_limit_bbox(box, box_expct):
+    if box_expct == 'err':
+        with pytest.raises(ValueError):
+            bbox.limit_bbox(box, torch.Size([32, 40]))
+        return
+
+    box_out = bbox.limit_bbox(box, torch.Size([32, 40]))
+    assert (box_out == box_expct).all()
+
+
+@pytest.mark.skip("Deprecated implementation.")
 @pytest.mark.parametrize("box,box_expct", [
     (torch.Tensor([[-5., -10, 3, 7]]), torch.Tensor([[0., 0., 8, 17]])),
     (torch.Tensor([[10., 20., 37, 41]]), torch.Tensor([[4., 18., 31., 39.]])),
+    (torch.tensor([[5., 5., 8., 10.]]), torch.Tensor([[5., 5., 8., 10.]])),
+    (torch.Tensor([[1., 1., 32., 40.]]), torch.Tensor([[0., 0., 31., 39.]])),
+    (torch.Tensor([[0., 0., 31.99, 39.99]]), torch.Tensor([[0., 0., 31.99, 39.99]])),
     (torch.Tensor([[0., 0., 40., 48]]), 'err'),
 ])
-def test_limit_bbox_to_img(box, box_expct):
+def test_shift_bbox_inside_img(box, box_expct):
     if box_expct == 'err':
         with pytest.raises(ValueError):
-            bbox.limit_bbox_to_img(box, torch.Size([32, 40]), 'xyxy')
+            bbox.shift_bbox_inside_img(box, torch.Size([32, 40]), 'xyxy')
 
     else:
-        box_out = bbox.limit_bbox_to_img(box, torch.Size([32, 40]), 'xyxy')
+        box_out = bbox.shift_bbox_inside_img(box, torch.Size([32, 40]), 'xyxy')
         assert (box_out == box_expct).all()
 
 

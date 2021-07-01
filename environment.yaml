@@ -14,6 +14,7 @@ dependencies:
   - tqdm
   - pyyaml
   - scikit-learn
+  - deprecated
 
   # developer
   - bump2version

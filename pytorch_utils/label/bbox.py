@@ -1,5 +1,6 @@
 from typing import Tuple
 
+from deprecated import deprecated
 import torch
 
 import pytorch_utils.lazy.tensor
@@ -30,18 +31,50 @@ def convert_bbox(box: torch.Tensor, mode_in: str, mode_out: str) -> torch.Tensor
     return box_out
 
 
-def limit_bbox_to_img(box, img_size: torch.Size, mode='xyxy'):
+def check_bbox(box: torch.Tensor, mode='xyxy'):
+    """
+    Current validations:
+        - non-zero width and height.
+
+    """
+
+    # check width and height
+    box_wh = convert_bbox(box, mode, 'xywh')
+
+    if (box_wh[..., 2:] == 0).any():
+        raise ValueError("At least one bounding box has width or height 0.")
+
+
+def limit_bbox(box: torch.Tensor, img_size: torch.Size, mode='xyxy', eps_border=1e-6):
+    """Limit bounding boxes to image (size)."""
+    box = convert_bbox(box, mode, 'xyxy')
+    img_size = torch.FloatTensor(list(img_size))
+
+    box = box.clamp(0.)
+    box[..., [0, 2]] = box[..., [0, 2]].clamp(max=img_size[-2] - eps_border)
+    box[..., [1, 3]] = box[..., [1, 3]].clamp(max=img_size[-1] - eps_border)
+
+    check_bbox(box, mode='xyxy')
+
+    return convert_bbox(box, 'xyxy', mode)
+
+
+@deprecated("Not needed? Must be revisited if needed.")
+@pytorch_utils.lazy.tensor.cycle_view(2, 0)
+def shift_bbox_inside_img(box, img_size: torch.Size, mode='xyxy', eps_border=1e-6):
+    """Shift bounding boxes inside image (without altering their size)."""
     box_xyxy = convert_bbox(box, mode, 'xyxy')
+    img_size = torch.Tensor(list(img_size))
 
     shift_min = box[:, :2] - torch.max(box_xyxy[:, :2], torch.zeros_like(box_xyxy[:, :2]))
-    shift_max = box[:, 2:] - torch.min(box_xyxy[:, 2:], torch.tensor(list(img_size)) - 1)
+    shift_max = box[:, 2:] - torch.min(box_xyxy[:, 2:], img_size - 1)
 
     box_xyxy -= shift_min.repeat(1, 2)
     box_xyxy -= shift_max.repeat(1, 2)
 
     box_out = convert_bbox(box_xyxy, 'xyxy', mode)
 
-    if (box_out.min() < 0).any() or (box_out[:, 2:] > torch.tensor(list(img_size)) - 1).any():
+    if (box_out.min() < 0).any() or (box_out[:, 2:] > img_size - 1).any():
         raise ValueError
 
     return box_out
