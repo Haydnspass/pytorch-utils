@@ -56,6 +56,9 @@ def dump_dataset(ds: torch.utils.data.Dataset, path, dump_fn: 'torch', file_exte
     Args:
         ds: dataset
         path: directory where to save meta file and samples
+        dump_fn: string, either 'torch' or 'dill' or callable
+        file_extension: only needed if dump_fn is a callable and a file extension for saving should
+         be specified.
     """
 
     path = Path(path) if not isinstance(path, Path) else path
