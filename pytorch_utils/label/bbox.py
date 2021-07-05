@@ -45,10 +45,26 @@ def check_bbox(box: torch.Tensor, mode='xyxy'):
         raise ValueError("At least one bounding box has width or height 0.")
 
 
-def limit_bbox(box: torch.Tensor, img_size: torch.Size, mode='xyxy', eps_border=1e-6):
-    """Limit bounding boxes to image (size)."""
+def limit_bbox(box: torch.Tensor, img_size: torch.Size, mode='xyxy', eps_border=1e-6,
+               order='matplotlib'):
+    """
+    Limit bounding boxes to image (size).
+
+    Args:
+        box: bounding boxes
+        img_size: image size to which to limit to
+        mode: mode of input bbox
+        eps_border: border to next pixel
+        order: 'matplotlib' interprets the x coordinate belonging to the last element of
+         image size and y to the second last. Alternatively "None" which does not alter
+         orders.
+    """
     box = convert_bbox(box, mode, 'xyxy')
     img_size = torch.FloatTensor(list(img_size))
+    if order == 'matplotlib':
+        img_size = img_size[[-1, -2]]
+    elif order is not None:
+        raise ValueError("Order must be None or 'matplotlib.")
 
     box = box.clamp(0.)
     box[..., [0, 2]] = box[..., [0, 2]].clamp(max=img_size[-2] - eps_border)
