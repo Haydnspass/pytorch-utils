@@ -1,4 +1,6 @@
 from unittest import mock
+
+import numpy.testing
 import pytest
 import torch
 
@@ -57,23 +59,33 @@ def test_limit_bbox(box, box_expct):
     assert (box_out == box_expct).all()
 
 
-@pytest.mark.skip("Deprecated implementation.")
-@pytest.mark.parametrize("box,box_expct", [
-    (torch.Tensor([[-5., -10, 3, 7]]), torch.Tensor([[0., 0., 8, 17]])),
-    (torch.Tensor([[10., 20., 37, 41]]), torch.Tensor([[4., 18., 31., 39.]])),
-    (torch.tensor([[5., 5., 8., 10.]]), torch.Tensor([[5., 5., 8., 10.]])),
-    (torch.Tensor([[1., 1., 32., 40.]]), torch.Tensor([[0., 0., 31., 39.]])),
-    (torch.Tensor([[0., 0., 31.99, 39.99]]), torch.Tensor([[0., 0., 31.99, 39.99]])),
-    (torch.Tensor([[0., 0., 40., 48]]), 'err'),
-])
-def test_shift_bbox_inside_img(box, box_expct):
-    if box_expct == 'err':
+_scenarios_1d = [
+    ([2, 10], [2, 10]),  # totally inside (no-op)
+    ([-3, 10], [0, 13]),  # lower end outside
+    ([30, 45], [17, 32 - 1e-6]),  # upper end outside
+    ([-3, 45], 'err'),  # both outside (=err)
+]
+
+
+@pytest.mark.parametrize("x,x_expct", _scenarios_1d)
+@pytest.mark.parametrize("y,y_expct", _scenarios_1d)
+def test_shift_bbox_inside_img(x, x_expct, y, y_expct):
+
+    box = torch.FloatTensor([x[0], y[0], x[1], y[1]])
+
+    if x_expct == 'err' or y_expct == 'err':
         with pytest.raises(ValueError):
-            bbox.shift_bbox_inside_img(box, torch.Size([32, 40]), 'xyxy')
+            bbox.shift_bbox_inside_img(box, torch.Size([32, 32]), 'xyxy')
 
     else:
-        box_out = bbox.shift_bbox_inside_img(box, torch.Size([32, 40]), 'xyxy')
-        assert (box_out == box_expct).all()
+        box_out = bbox.shift_bbox_inside_img(box, torch.Size([32, 32]), 'xyxy')
+
+        box_expct = torch.FloatTensor([x_expct[0], y_expct[0], x_expct[1], y_expct[1]])
+        numpy.testing.assert_almost_equal(
+            box_out.numpy(),
+            box_expct.numpy(),
+            decimal=5,
+        )
 
 
 def test_resize_bbox():

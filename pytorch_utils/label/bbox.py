@@ -60,11 +60,7 @@ def limit_bbox(box: torch.Tensor, img_size: torch.Size, mode='xyxy', eps_border=
          orders.
     """
     box = convert_bbox(box, mode, 'xyxy')
-    img_size = torch.FloatTensor(list(img_size))
-    if order == 'matplotlib':
-        img_size = img_size[[-1, -2]]
-    elif order is not None:
-        raise ValueError("Order must be None or 'matplotlib.")
+    img_size = _unified_img_size(img_size, order)
 
     box = box.clamp(0.)
     box[..., [0, 2]] = box[..., [0, 2]].clamp(max=img_size[-2] - eps_border)
@@ -75,23 +71,33 @@ def limit_bbox(box: torch.Tensor, img_size: torch.Size, mode='xyxy', eps_border=
     return convert_bbox(box, 'xyxy', mode)
 
 
-@deprecated("Not needed? Must be revisited if needed.")
 @pytorch_utils.lazy.tensor.cycle_view(2, 0)
-def shift_bbox_inside_img(box, img_size: torch.Size, mode='xyxy', eps_border=1e-6):
+def shift_bbox_inside_img(box, img_size: torch.Size, mode='xyxy', eps_border=1e-6,
+                          order: str = 'matplotlib'):
     """Shift bounding boxes inside image (without altering their size)."""
+
     box_xyxy = convert_bbox(box, mode, 'xyxy')
-    img_size = torch.Tensor(list(img_size))
+    img_size = _unified_img_size(img_size, order)
 
-    shift_min = box[:, :2] - torch.max(box_xyxy[:, :2], torch.zeros_like(box_xyxy[:, :2]))
-    shift_max = box[:, 2:] - torch.min(box_xyxy[:, 2:], img_size - 1)
+    shift_min = torch.max(
+        -box_xyxy[:, :2],
+        torch.zeros_like(box_xyxy[:, :2])
+    )
+    shift_max = torch.min(
+        (img_size - eps_border) - box_xyxy[:, 2:],
+        torch.zeros_like(box_xyxy[:, :2])
+    )
 
-    box_xyxy -= shift_min.repeat(1, 2)
-    box_xyxy -= shift_max.repeat(1, 2)
+    # shifts must not be non-zero at the same positions
+    if (shift_min * shift_max).any():
+        raise ValueError("Bounding boxes can not be shifted such that they fit inside the specified"
+                         "image size.")
 
+    box_xyxy += shift_min.repeat(1, 2)
+    box_xyxy += shift_max.repeat(1, 2)
+
+    check_bbox(box_xyxy, mode='xyxy')
     box_out = convert_bbox(box_xyxy, 'xyxy', mode)
-
-    if (box_out.min() < 0).any() or (box_out[:, 2:] > img_size - 1).any():
-        raise ValueError
 
     return box_out
 
@@ -153,3 +159,15 @@ def _bbox_xyxy_to_arbitrary(box: torch.Tensor, mode: str) -> torch.Tensor:
         raise NotImplementedError
 
     return box_out
+
+
+def _unified_img_size(img_size, order: str = 'matplotlib'):
+    """Swaps image size depending on coordinate order."""
+
+    img_size = torch.FloatTensor(list(img_size))
+    if order == 'matplotlib':
+        img_size = img_size[[-1, -2]]
+    elif order is not None:
+        raise ValueError("Order must be None or 'matplotlib.")
+
+    return img_size
