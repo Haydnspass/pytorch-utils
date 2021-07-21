@@ -1,6 +1,5 @@
 from typing import Tuple
 
-from deprecated import deprecated
 import torch
 
 import pytorch_utils.lazy.tensor
