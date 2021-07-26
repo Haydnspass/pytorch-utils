@@ -12,6 +12,7 @@ def test_bbox_eq():
     b0 = bbox.BBox([[1., 2., 3., 4.]], 'xyxy')
     b1 = bbox.BBox([[2., 3., 2., 2.]], 'cxcywh')
 
+    assert isinstance(b0 == b1, bool)
     assert b0 == b1
 
 

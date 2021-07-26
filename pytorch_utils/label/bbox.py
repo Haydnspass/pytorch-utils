@@ -30,7 +30,7 @@ class BBox:
         return self.xywh[..., 2] * self.xywh[..., 3]
 
     def __eq__(self, other) -> bool:
-        return (self.xyxy == other.xyxy).all()
+        return (self.xyxy == other.xyxy).all().item()
 
     def check(self):
         self.check_area()
