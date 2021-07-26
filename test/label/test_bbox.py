@@ -7,6 +7,14 @@ import torch
 from pytorch_utils.label import bbox
 
 
+def test_bbox_eq():
+
+    b0 = bbox.BBox([[1., 2., 3., 4.]], 'xyxy')
+    b1 = bbox.BBox([[2., 3., 2., 2.]], 'cxcywh')
+
+    assert b0 == b1
+
+
 @pytest.mark.parametrize("box,expct", [
     (torch.Tensor([10, 20, 30, 40]), None),
     (torch.Tensor([[10, 20, 10, 40]]), 'Bounding box(es) are not of valid area.')

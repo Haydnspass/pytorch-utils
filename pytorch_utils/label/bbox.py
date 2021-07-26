@@ -29,6 +29,12 @@ class BBox:
     def area(self):
         return self.xywh[..., 2] * self.xywh[..., 3]
 
+    def __eq__(self, other) -> bool:
+        return (self.xyxy == other.xyxy).all()
+
+    def check(self):
+        self.check_area()
+
     def check_area(self):
         if self.area <= 0:
             raise ValueError("Bounding box(es) are not of valid area.")
