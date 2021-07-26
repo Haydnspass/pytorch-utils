@@ -7,6 +7,38 @@ import torch
 from pytorch_utils.label import bbox
 
 
+@pytest.mark.parametrize("box,expct", [
+    (torch.Tensor([10, 20, 30, 40]), None),
+    (torch.Tensor([[10, 20, 10, 40]]), 'Bounding box(es) are not of valid area.')
+])
+def test_check_bbox_area(box, expct):
+    box = bbox.BBox(box, 'xyxy')
+    if expct is None:
+        box.check_area()
+        return
+
+    with pytest.raises(ValueError) as err:
+        box.check_area()
+
+    assert str(err.value) == expct
+
+
+@pytest.mark.parametrize("box,expct", [
+    ([10, 20, 20, 40], None),
+    ([10, 30, 20, 80], 'Bounding box(es) are outside of the specified image size.')
+])
+def test_check_bbox_fits_img(box, expct):
+    box = bbox.BBox(box, 'xyxy')
+    if expct is None:
+        box.check_fits_img([64, 21])
+        return
+
+    with pytest.raises(ValueError) as err:
+        box.check_fits_img([64, 21])
+
+    assert str(err.value) == expct
+
+
 @pytest.mark.parametrize("mode_in, mode_out", [
     ('xyxy', 'xyxy'),
     ('xyxy', 'xywh'),
@@ -25,21 +57,6 @@ def test_convert_bbox(mode_in, mode_out):
     else:
         xyxy_to_arb.assert_called()
         arb_to_xyxy.assert_called()
-
-
-@pytest.mark.parametrize("box,expct", [
-    (torch.Tensor([10, 20, 30, 40]), None),
-    (torch.Tensor([[10, 20, 10, 40]]), 'At least one bounding box has width or height 0.')
-])
-def test_check_box(box, expct):
-    if expct is None:
-        bbox.check_bbox(box)
-        return
-
-    with pytest.raises(ValueError) as err:
-        bbox.check_bbox(box)
-
-    assert str(err.value) == expct
 
 
 @pytest.mark.parametrize("box,box_expct", [
@@ -62,6 +79,7 @@ def test_limit_bbox(box, box_expct):
 _scenarios_1d = [
     ([2, 10], [2, 10]),  # totally inside (no-op)
     ([-3, 10], [0, 13]),  # lower end outside
+    ([-3, 31], 'err'),
     ([30, 45], [17, 32 - 1e-6]),  # upper end outside
     ([-3, 45], 'err'),  # both outside (=err)
 ]
@@ -86,6 +104,9 @@ def test_shift_bbox_inside_img(x, x_expct, y, y_expct):
             box_expct.numpy(),
             decimal=5,
         )
+
+def test_shift_bbox_inside_img_non_det():
+    pass
 
 
 def test_resize_bbox():

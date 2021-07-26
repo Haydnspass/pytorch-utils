@@ -1,9 +1,49 @@
 from typing import Tuple
 
-from deprecated import deprecated
 import torch
 
 import pytorch_utils.lazy.tensor
+
+
+class BBox:
+    def __init__(self, data: torch.Tensor, mode: str = 'xyxy'):
+        self._data = convert_bbox(
+            data if isinstance(data, torch.Tensor) else torch.Tensor(data),
+            mode_in=mode,
+            mode_out='xyxy'
+        )
+
+    @property
+    def xyxy(self):
+        return convert_bbox(self._data, mode_in='xyxy', mode_out='xyxy')
+
+    @property
+    def xywh(self):
+        return convert_bbox(self._data, mode_in='xyxy', mode_out='xywh')
+
+    @property
+    def cxcywh(self):
+        return convert_bbox(self._data, mode_in='xyxy', mode_out='cxcywh')
+
+    @property
+    def area(self):
+        return self.xywh[..., 2] * self.xywh[..., 3]
+
+    def check_area(self):
+        if self.area <= 0:
+            raise ValueError("Bounding box(es) are not of valid area.")
+
+        return self
+
+    def check_fits_img(self, img_size: torch.Size, order: str = 'matplotlib', eps_border: float = 1e-6):
+        img_size = _unified_img_size(img_size, order=order)
+
+        if (self.xyxy < 0).any() or \
+           (self.xyxy[..., [0, 2]] > img_size[0] - eps_border).any() or \
+           (self.xyxy[..., [1, 3]] > img_size[1] - eps_border).any():
+            raise ValueError("Bounding box(es) are outside of the specified image size.")
+
+        return self
 
 
 def convert_bbox(box: torch.Tensor, mode_in: str, mode_out: str) -> torch.Tensor:
@@ -29,20 +69,6 @@ def convert_bbox(box: torch.Tensor, mode_in: str, mode_out: str) -> torch.Tensor
     box_out = _bbox_xyxy_to_arbitrary(box_xyxy, mode=mode_out)
 
     return box_out
-
-
-def check_bbox(box: torch.Tensor, mode='xyxy'):
-    """
-    Current validations:
-        - non-zero width and height.
-
-    """
-
-    # check width and height
-    box_wh = convert_bbox(box, mode, 'xywh')
-
-    if (box_wh[..., 2:] == 0).any():
-        raise ValueError("At least one bounding box has width or height 0.")
 
 
 def limit_bbox(box: torch.Tensor, img_size: torch.Size, mode='xyxy', eps_border=1e-6,
