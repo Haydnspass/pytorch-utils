@@ -69,20 +69,21 @@ def test_convert_bbox(mode_in, mode_out):
 
 
 @pytest.mark.parametrize("box,box_expct", [
-    (torch.Tensor([[-5., -10, 3, 7]]), torch.Tensor([[0., 0., 3, 7]])),
-    (torch.Tensor([[0., 0., 31.99, 39.99]]), torch.Tensor([[0., 0., 31.99, 39.99]])),
-    (torch.Tensor([-5, -1, 100, 200]), torch.Tensor([0., 0., 32 - 1e-6, 40 - 1e-6])),
-    (torch.Tensor([[-5, 2, -1, 7]]), 'err'),
-    (torch.Tensor([[100, 200, 300, 400]]), 'err'),
+    ([[-5., -10, 3, 7]], [[0., 0., 3, 7]]),
+    ([[0., 0., 31.99, 39.99]], [[0., 0., 31.99, 39.99]]),
+    ([-5, -1, 100, 200], [0., 0., 32 - 1e-6, 40 - 1e-6]),
+    ([[-5, 2, -1, 7]], 'err'),
+    ([[100, 200, 300, 400]], 'err'),
 ])
 def test_limit_bbox(box, box_expct):
     if box_expct == 'err':
         with pytest.raises(ValueError):
-            bbox.limit_bbox(box, torch.Size([32, 40]))
+            bbox.BBox(box).limit_bbox(torch.Size([32, 40]), order=None)
         return
 
-    box_out = bbox.limit_bbox(box, torch.Size([32, 40]))
-    assert (box_out == box_expct).all()
+    box_out = bbox.BBox(box).limit_bbox(torch.Size([32, 40]), order=None)
+    box_expct = bbox.BBox(box_expct)
+    assert box_out == box_expct
 
 
 _scenarios_1d = [
@@ -98,24 +99,21 @@ _scenarios_1d = [
 @pytest.mark.parametrize("y,y_expct", _scenarios_1d)
 def test_shift_bbox_inside_img(x, x_expct, y, y_expct):
 
-    box = torch.FloatTensor([x[0], y[0], x[1], y[1]])
+    box = [x[0], y[0], x[1], y[1]]
 
     if x_expct == 'err' or y_expct == 'err':
         with pytest.raises(ValueError):
-            bbox.shift_bbox_inside_img(box, torch.Size([32, 32]), 'xyxy')
+            bbox.BBox(box).shift_bbox_inside_img(torch.Size([32, 32]))
 
     else:
-        box_out = bbox.shift_bbox_inside_img(box, torch.Size([32, 32]), 'xyxy')
+        box_out = bbox.BBox(box).shift_bbox_inside_img(torch.Size([32, 32]))
 
-        box_expct = torch.FloatTensor([x_expct[0], y_expct[0], x_expct[1], y_expct[1]])
+        box_expct = bbox.BBox([x_expct[0], y_expct[0], x_expct[1], y_expct[1]])
         numpy.testing.assert_almost_equal(
-            box_out.numpy(),
-            box_expct.numpy(),
+            box_out.xyxy.numpy(),
+            box_expct.xyxy.numpy(),
             decimal=5,
         )
-
-def test_shift_bbox_inside_img_non_det():
-    pass
 
 
 def test_resize_bbox():

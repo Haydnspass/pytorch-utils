@@ -15,7 +15,11 @@ class BBox:
 
     @property
     def xyxy(self):
-        return convert_bbox(self._data, mode_in='xyxy', mode_out='xyxy')
+        return self._data  # convert_bbox(self._data, mode_in='xyxy', mode_out='xyxy')
+
+    @xyxy.setter
+    def xyxy(self, val):
+        self._data = val
 
     @property
     def xywh(self):
@@ -31,6 +35,36 @@ class BBox:
 
     def __eq__(self, other) -> bool:
         return (self.xyxy == other.xyxy).all().item()
+
+    def limit_bbox(self, img_size: torch.Size, eps_border=1e-6, order='matplotlib'):
+        """
+        Limit bounding boxes to image (size).
+
+        Args:
+            box: bounding boxes
+            img_size: image size to which to limit to
+            mode: mode of input bbox
+            eps_border: border to next pixel
+            order: 'matplotlib' interprets the x coordinate belonging to the last element of
+             image size and y to the second last. Alternatively "None" which does not alter
+             orders.
+        """
+        img_size = _unified_img_size(img_size, order)
+
+        self.xyxy.clamp_(0.)
+        self.xyxy[..., [0, 2]] = self.xyxy[..., [0, 2]].clamp(max=img_size[-2] - eps_border)
+        self.xyxy[..., [1, 3]] = self.xyxy[..., [1, 3]].clamp(max=img_size[-1] - eps_border)
+
+        self.check_area()
+
+        return self
+
+    def shift_bbox_inside_img(self, img_size: torch.Size, eps_border=1e-6, order='matplotlib'):
+        self.xyxy = shift_bbox_inside_img(
+            self.xyxy, img_size=img_size, mode='xyxy', eps_border=eps_border, order=order
+        )
+
+        return self
 
     def check(self):
         self.check_area()
@@ -77,34 +111,10 @@ def convert_bbox(box: torch.Tensor, mode_in: str, mode_out: str) -> torch.Tensor
     return box_out
 
 
-def limit_bbox(box: torch.Tensor, img_size: torch.Size, mode='xyxy', eps_border=1e-6,
-               order='matplotlib'):
-    """
-    Limit bounding boxes to image (size).
-
-    Args:
-        box: bounding boxes
-        img_size: image size to which to limit to
-        mode: mode of input bbox
-        eps_border: border to next pixel
-        order: 'matplotlib' interprets the x coordinate belonging to the last element of
-         image size and y to the second last. Alternatively "None" which does not alter
-         orders.
-    """
-    box = convert_bbox(box, mode, 'xyxy')
-    img_size = _unified_img_size(img_size, order)
-
-    box = box.clamp(0.)
-    box[..., [0, 2]] = box[..., [0, 2]].clamp(max=img_size[-2] - eps_border)
-    box[..., [1, 3]] = box[..., [1, 3]].clamp(max=img_size[-1] - eps_border)
-
-    check_bbox(box, mode='xyxy')
-
-    return convert_bbox(box, 'xyxy', mode)
-
-
 @pytorch_utils.lazy.tensor.cycle_view(2, 0)
-def shift_bbox_inside_img(box, img_size: torch.Size, mode='xyxy', eps_border=1e-6,
+def shift_bbox_inside_img(box, img_size: torch.Size,
+                          mode='xyxy',
+                          eps_border=1e-6,
                           order: str = 'matplotlib'):
     """Shift bounding boxes inside image (without altering their size)."""
 
@@ -122,13 +132,18 @@ def shift_bbox_inside_img(box, img_size: torch.Size, mode='xyxy', eps_border=1e-
 
     # shifts must not be non-zero at the same positions
     if (shift_min * shift_max).any():
-        raise ValueError("Bounding boxes can not be shifted such that they fit inside the specified"
-                         "image size.")
+        raise ValueError(
+            "Bounding boxes can not be shifted such that they fit inside the specified"
+            "image size.")
 
     box_xyxy += shift_min.repeat(1, 2)
     box_xyxy += shift_max.repeat(1, 2)
 
-    check_bbox(box_xyxy, mode='xyxy')
+    BBox(box_xyxy, mode='xyxy').check_fits_img(
+        img_size=img_size,
+        order='matplotlib',  # cause this was ensured earlier
+        eps_border=eps_border,
+    )
     box_out = convert_bbox(box_xyxy, 'xyxy', mode)
 
     return box_out
