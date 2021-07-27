@@ -66,6 +66,14 @@ class BBox:
 
         return self
 
+    def repair_order(self):
+        xyxy = self.xyxy
+        xyxy[..., [0, 2]] = xyxy[..., [0, 2]].sort(dim=-1)[0]
+        xyxy[..., [1, 3]] = xyxy[..., [1, 3]].sort(dim=-1)[0]
+
+        self.xyxy = xyxy
+        return self
+
     def check(self):
         self.check_area()
 

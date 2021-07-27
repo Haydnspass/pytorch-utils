@@ -116,6 +116,17 @@ def test_shift_bbox_inside_img(x, x_expct, y, y_expct):
         )
 
 
+@pytest.mark.parametrize("box,box_expct", [
+    ([1., 2., 3., 4.], [1., 2., 3., 4.]),
+    ([3., 4., 1., 2.], [1., 2., 3., 4.])
+])
+def test_repair_order(box, box_expct):
+    b = bbox.BBox(box)
+    b.repair_order()
+
+    assert (b.xyxy == torch.Tensor(box_expct)).all()
+
+
 def test_resize_bbox():
     box = torch.Tensor([[-20, -30, 20, 30]])
 
