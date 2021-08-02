@@ -1,7 +1,9 @@
-from functools import wraps
-from typing import List
+from functools import wraps, partial
+from typing import List, Optional, Union, Callable
 
 import torch
+
+from . import cycle
 
 
 def view_to_dim(x: torch.Tensor, ndim: int, dim: int, squeeze: bool = True, unsqueeze: bool = True):
@@ -12,8 +14,8 @@ def view_to_dim(x: torch.Tensor, ndim: int, dim: int, squeeze: bool = True, unsq
         x: tensor
         ndim: target dim
         dim: index of dimension to inflate / deflate
-        squeeze: allow squeeze
         unsqueeze: allow unsqueeze
+        squeeze: allow squeeze
 
     """
     while x.dim() > ndim and squeeze:
@@ -27,8 +29,27 @@ def view_to_dim(x: torch.Tensor, ndim: int, dim: int, squeeze: bool = True, unsq
     return x
 
 
-def cycle_view(ndim: int,
-               ndim_diff: int = 0, dim: int = 0, squeeze: bool = True, unsqueeze: bool = True):
+def view_to_dim_dec(ndim: int, dim: int,
+                    unsqueeze: bool = True, squeeze: bool = True,
+                    arg: Optional[Union[int, str]] = 0) -> Callable:
+    """
+    Decorator that changes the dimension of a specific argument.
+
+    Args:
+        ndim: target dim
+        dim: index of dimension to inflate / deflate
+        unsqueeze: allow unsqueeze
+        squeeze: allow squeeze
+        arg: which argument to apply to
+
+    """
+    view_to_dim_part = partial(view_to_dim, ndim=ndim, dim=dim, unsqueeze=unsqueeze, squeeze=squeeze)
+
+    return cycle.cycle(view_to_dim_part, None, arg, None)
+
+
+def cycle_view(ndim: int, ndim_diff: int = 0, dim: int = 0,
+               squeeze: bool = True, unsqueeze: bool = True):
     """
     Decorator that makes sure tensor to be of specific size, run through function (first argument)
     and sizes single return output back to its original dimensionality or a specified delta.

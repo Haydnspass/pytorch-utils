@@ -23,6 +23,20 @@ def test_view_to_dim_expct():
         lazy.tensor.view_to_dim(torch.rand(5, 4), 1, 0)
 
 
+def test_view_to_dim_dec():
+    def _dummy(x):
+        if x.dim() != 2:
+            raise ValueError
+
+    lazy.tensor.view_to_dim_dec(
+        ndim=2,
+        dim=0,
+        unsqueeze=True,
+        squeeze=True,
+        arg=0
+    )(_dummy)(torch.rand(5))
+
+
 def test_cycle_view():
     @lazy.tensor.cycle_view(ndim=4, dim=0)
     def func(x):
