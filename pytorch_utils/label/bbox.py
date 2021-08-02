@@ -25,9 +25,17 @@ class BBox:
     def xywh(self):
         return convert_bbox(self._data, mode_in='xyxy', mode_out='xywh')
 
+    @xywh.setter
+    def xywh(self, val):
+        self.xyxy = convert_bbox(val, mode_in='xywh', mode_out='xyxy')
+
     @property
     def cxcywh(self):
         return convert_bbox(self._data, mode_in='xyxy', mode_out='cxcywh')
+
+    @cxcywh.setter
+    def cxcywh(self, val):
+        self.xyxy = convert_bbox(val, mode_in='cxcywh', mode_out='xyxy')
 
     @property
     def area(self):
@@ -58,6 +66,26 @@ class BBox:
         self.check_area()
 
         return self
+
+    def square_bbox(self, mode: str = 'max'):
+        if mode not in ('min', 'max'):
+            raise ValueError("Mode must be max or min.")
+
+        self.cxcywh = self._square_bbox(self.cxcywh, mode=mode)
+        return self
+
+    @staticmethod
+    @pytorch_utils.lazy.tensor.cycle_view(2, 0)
+    def _square_bbox(cxcywh: torch.Tensor, mode) -> torch.Tensor:
+        if cxcywh.dim() != 2:
+            raise ValueError
+
+        if mode == 'min':
+            cxcywh[:, 2:] = cxcywh[..., 2:].min(1, keepdim=True)[0].repeat(1, 2)
+        if mode == 'max':
+            cxcywh[:, 2:] = cxcywh[..., 2:].max(1, keepdim=True)[0].repeat(1, 2)
+
+        return cxcywh
 
     def shift_bbox_inside_img(self, img_size: torch.Size, eps_border=1e-6, order='matplotlib'):
         self.xyxy = shift_bbox_inside_img(
@@ -165,17 +193,6 @@ def resize_boxes(box, wh: Tuple[float, float], mode: str = 'xyxy'):
     box_cxywh[:, 3] = wh[1]
 
     return convert_bbox(box_cxywh, 'cxcywh', mode)
-
-
-def square_boxes(box, mode: str = 'xyxy'):
-    if not box.dim() == 1:
-        raise ValueError("Square boxes currently only supported for a single box.")
-
-    box_cxywh = convert_bbox(box, mode, 'cxcywh')
-    wh_max = box_cxywh[2:].max().item()
-    box_aug_cxywh = resize_boxes(box_cxywh, (wh_max, wh_max), mode='cxcywh')
-
-    return convert_bbox(box_aug_cxywh, mode_in='cxcywh', mode_out=mode)
 
 
 @pytorch_utils.lazy.tensor.cycle_view(2, 0)

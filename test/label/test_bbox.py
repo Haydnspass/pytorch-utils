@@ -133,16 +133,16 @@ def test_resize_bbox():
     box_out = bbox.resize_boxes(box, (50, 20), 'xyxy')
     assert (box_out == torch.Tensor([-25, -10, 25, 10])).all()
 
+@pytest.mark.parametrize("mode,box_in,box_expct", [
+    ("max", [1., 2., 3., 4.], [1., 2., 4., 4.]),
+    ("min", [1., 2., 3., 4.], [1., 2., 3., 3.]),
+    ("max", [[1., 2., 3., 4.], [-500., -1200., 899., 283]], [[1., 2., 4., 4.], [-500., -1200., 899., 899.]])
+])
+def test_square_boxes(mode, box_in, box_expct):
+    box = bbox.BBox(box_in, mode='cxcywh')
+    box_expct = bbox.BBox(box_expct, mode='cxcywh')
 
-def test_square_box():
-    box = torch.Tensor([100, 200, 300, 500])
-
-    box_out = bbox.square_boxes(box, 'xyxy')
-    assert (box_out == torch.Tensor([50, 200, 350, 500])).all()
-
-    # raises
-    with pytest.raises(ValueError):
-        bbox.square_boxes(box.unsqueeze(0), 'xyxy')
+    assert box.square_bbox(mode=mode) == box_expct
 
 
 @pytest.mark.parametrize("box,mode,box_expct", [
