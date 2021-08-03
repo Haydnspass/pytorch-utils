@@ -201,6 +201,16 @@ def test_square_boxes(mode, box_in, box_expct):
     assert box.square_bbox_(mode=mode) == box_expct
 
 
+def test_random_close_bbox():
+    box = bbox.BBox([0., 10., 20., 30.], mode='cxcywh')
+    box_rand = box.random_close(rel_dist=2.)
+
+    assert (box_rand.xyxy != box.xyxy).all()
+    assert (box_rand.cxcywh[2:] == torch.Tensor([20., 30.])).all()
+    assert (torch.Tensor([-20., -20.]) <= box_rand.cxcywh[:2]).all()
+    assert (box_rand.cxcywh[:2] <= torch.Tensor([20., 40.])).all()
+
+
 @pytest.mark.parametrize("box,mode,box_expct", [
     (torch.Tensor([[1., 2., 3., 4.]]), 'xyxy', torch.Tensor([[1., 2., 3., 4.]])),
     (torch.Tensor([[1., 2., 3., 4.]]), 'xywh', torch.Tensor([[1., 2., 4., 6.]])),

@@ -143,6 +143,13 @@ class BBox:
 
         return img, shift
 
+    def random_close(self, rel_dist: float):
+        wh = self.cxcywh[..., 2:]
+        cxcywh = self.cxcywh.clone()
+        cxcywh[..., :2] += (torch.rand_like(wh) - 0.5) * wh
+
+        return BBox(cxcywh, 'cxcywh')
+
     def repair_order(self):
         xyxy = self.xyxy
         xyxy[..., [0, 2]] = xyxy[..., [0, 2]].sort(dim=-1)[0]
