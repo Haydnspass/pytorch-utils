@@ -1,5 +1,6 @@
 from unittest import mock
 
+import numpy as np
 import numpy.testing
 import pytest
 import torch
@@ -90,10 +91,10 @@ def test_convert_bbox(mode_in, mode_out):
 def test_limit_bbox(box, box_expct):
     if box_expct == 'err':
         with pytest.raises(ValueError):
-            bbox.BBox(box).limit_bbox(torch.Size([32, 40]), order=None)
+            bbox.BBox(box).limit_bbox_(torch.Size([32, 40]), order=None)
         return
 
-    box_out = bbox.BBox(box).limit_bbox(torch.Size([32, 40]), order=None)
+    box_out = bbox.BBox(box).limit_bbox_(torch.Size([32, 40]), order=None)
     box_expct = bbox.BBox(box_expct)
     assert box_out == box_expct
 
@@ -136,7 +137,7 @@ def test_shift_bbox_inside_img(x, x_expct, y, y_expct):
     ([-3.2, 1., 10., 20.], 'floor', [10, 19], [0, 1]),
     ([500, 700, 880, 290], 'floor', [0, 0], [float('nan'), float('nan')])
 ])
-def test_crop_image(order, box, mode, img_expct, shift_expct):
+def test_crop_image_unfilled(order, box, mode, img_expct, shift_expct):
     box = bbox.BBox(box)
     img = torch.rand(3, 64, 64)
     shift_expct = torch.tensor(shift_expct)
@@ -147,7 +148,27 @@ def test_crop_image(order, box, mode, img_expct, shift_expct):
         img_expct.reverse()
 
     assert img_out[0].size() == torch.Size(img_expct)
-    assert (shift_out == shift_expct).all()
+    assert np.array_equal(shift_out.numpy(), shift_expct.numpy(), equal_nan=True)
+
+
+@pytest.mark.parametrize("order", [None, 'matplotlib'])
+@pytest.mark.parametrize("box,mode,img_size,shift", [
+    ([1., 2., 3., 5], 'floor', [2, 3], [1, 2]),
+    ([-3.2, 2., 5., 7.], 'floor', [9, 5], [-4, 2]),
+    ([5.3, 3., 17., 20.], 'ceil', [11, 17], [6, 3])
+])
+def test_crop_image_filled(order, box, mode, img_size, shift):
+    box = bbox.BBox(box)
+    img = torch.rand(3, 10, 12)
+    shift = torch.tensor(shift)
+
+    img_out, shift_out = box.crop_image(img, mode=mode, order=order, fill=0.)
+
+    if order == 'matplotlib':
+        img_size.reverse()
+
+    assert img_out[0].size() == torch.Size(img_size)
+    assert (shift_out == shift).all()
 
 
 @pytest.mark.parametrize("box,box_expct", [
@@ -177,7 +198,7 @@ def test_square_boxes(mode, box_in, box_expct):
     box = bbox.BBox(box_in, mode='cxcywh')
     box_expct = bbox.BBox(box_expct, mode='cxcywh')
 
-    assert box.square_bbox(mode=mode) == box_expct
+    assert box.square_bbox_(mode=mode) == box_expct
 
 
 @pytest.mark.parametrize("box,mode,box_expct", [

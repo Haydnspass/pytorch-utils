@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Optional, Tuple
 
 import torch
 
@@ -8,7 +8,7 @@ import pytorch_utils.lazy.tensor
 class BBox:
     def __init__(self, data: torch.Tensor, mode: str = 'xyxy'):
         self._data = convert_bbox(
-            data if isinstance(data, torch.Tensor) else torch.Tensor(data),
+            data.clone() if isinstance(data, torch.Tensor) else torch.Tensor(data),
             mode_in=mode,
             mode_out='xyxy'
         )
@@ -57,7 +57,7 @@ class BBox:
 
     def limit_bbox(self, img_size: torch.Size, eps_border=1e-6, order='matplotlib',
                     check: bool = True):
-        return self.clone().limit_bbox(img_size, eps_border, order, check)
+        return self.clone().limit_bbox_(img_size, eps_border, order, check)
 
     def limit_bbox_(self, img_size: torch.Size, eps_border=1e-6, order='matplotlib',
                     check: bool = True):
@@ -79,49 +79,68 @@ class BBox:
         self.xyxy[..., [0, 2]] = self.xyxy[..., [0, 2]].clamp(max=img_size[-2] - eps_border)
         self.xyxy[..., [1, 3]] = self.xyxy[..., [1, 3]].clamp(max=img_size[-1] - eps_border)
 
-        self.check_area()
+        if check:
+            self.check_area()
 
         return self
 
     def square_bbox(self, mode: str = 'max'):
+        return self.clone().square_bbox_(mode)
+
+    def square_bbox_(self, mode: str = 'max'):
         if mode not in ('min', 'max'):
             raise ValueError("Mode must be max or min.")
 
         self.cxcywh = self._square_bbox(self.cxcywh, mode=mode)
         return self
 
-    def shift_bbox_inside_img(self, img_size: torch.Size, eps_border=1e-6, order='matplotlib'):
+    def shift_bbox_inside_img(self, img_size: torch.Size, eps_border=1e-6, order: str = 'matplotlib'):
+        return self.clone().shift_bbox_inside_img_(img_size, eps_border, order)
+
+    def shift_bbox_inside_img_(self, img_size: torch.Size, eps_border=1e-6, order: str = 'matplotlib'):
         self.xyxy = shift_bbox_inside_img(
             self.xyxy, img_size=img_size, mode='xyxy', eps_border=eps_border, order=order
         )
 
         return self
 
-    def crop_image(self, img: torch.Tensor, mode: str = 'floor', order: str = 'matplotlib'):
+    def crop_image(self, img: torch.Tensor, *,
+                   fill: Optional[float]= None, mode: str = 'floor', order: str = 'matplotlib'):
         assert mode in ('ceil', 'floor')
         assert order in (None, 'matplotlib')
         assert len(self) == 1
         assert img.dim() in (2, 3)
 
-        xyxy = self.xyxy.floor() if mode == 'floor' else self.xyxy.ceil()
+        xy_px = self.xyxy.floor() if mode == 'floor' else self.xyxy.ceil()
 
-        img_bbox = BBox.__init__(xyxy, mode='xyxy')
-        img_bbox.limit_bbox(img_size=img.size(), )
-        xyxy[:2] = xyxy[:2].clamp(min=0)
+        crop_box = BBox(xy_px, mode='xyxy')
+        crop_lim_box = crop_box.limit_bbox(img_size=img.size(), eps_border=0., order=order, check=False)
+        margins = (crop_lim_box.xyxy - crop_box.xyxy).abs().int()
+
+        xy_px = crop_lim_box.xyxy
+
+        # shift is relative bbox so no coordinate swapping
+        shift = xy_px[:2] if crop_lim_box.area > 0 else torch.Tensor([float('nan'), float('nan')])
+        shift_filled = crop_box.xyxy[:2]
 
         if order == 'matplotlib':
-            xyxy = xyxy[[1, 0, 3, 2]]
+            xy_px = xy_px[[1, 0, 3, 2]]
+            margins = margins[[1, 0, 3, 2]]
+        elif order is not None:
+            raise ValueError
 
-        xyxy[2] = xyxy[2].clamp(max=img.size(-2))
-        xyxy[3] = xyxy[3].clamp(max=img.size(-1))
-
-        xyxy = xyxy.long()
+        xy_px = xy_px.long()
 
         img = img[
             ...,
-            slice(xyxy[0], xyxy[2]),
-            slice(xyxy[1], xyxy[3])
+            slice(xy_px[0], xy_px[2]),
+            slice(xy_px[1], xy_px[3])
         ]
+
+        if fill is not None:
+            shift = shift_filled
+            img = torch.nn.functional.pad(img, margins[[1, 3, 0, 2]].tolist(), mode='constant', value=fill)
+
         return img, shift
 
     def repair_order(self):
