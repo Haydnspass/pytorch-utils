@@ -116,6 +116,28 @@ def test_shift_bbox_inside_img(x, x_expct, y, y_expct):
         )
 
 
+@pytest.mark.parametrize("order", [None, 'matplotlib'])
+@pytest.mark.parametrize("box,mode,img_expct,shift_expct", [
+    ([1., 2., 3., 5.], 'floor', [2, 3], [1, 2]),
+    ([1.9, 2.1, 3.1, 5.7], 'floor', [2, 3], [1, 2]),
+    ([1.89, 2.1, 3.1, 5.7], 'ceil', [2, 3], [2, 3]),
+    ([-3.2, 1., 10., 20.], 'floor', [10, 19], [0, 1]),
+    ([500, 700, 880, 290], 'floor', [0, 0], [float('nan'), float('nan')])
+])
+def test_crop_image(order, box, mode, img_expct, shift_expct):
+    box = bbox.BBox(box)
+    img = torch.rand(3, 64, 64)
+    shift_expct = torch.tensor(shift_expct)
+
+    img_out, shift_out = box.crop_image(img, mode=mode, order=order)
+
+    if order == 'matplotlib':
+        img_expct.reverse()
+
+    assert img_out[0].size() == torch.Size(img_expct)
+    assert (shift_out == shift_expct).all()
+
+
 @pytest.mark.parametrize("box,box_expct", [
     ([1., 2., 3., 4.], [1., 2., 3., 4.]),
     ([3., 4., 1., 2.], [1., 2., 3., 4.])
@@ -124,7 +146,7 @@ def test_repair_order(box, box_expct):
     b = bbox.BBox(box)
     b.repair_order()
 
-    assert (b.xyxy == torch.Tensor(box_expct)).all()
+    assert (b.xyxy == torch.tensor(box_expct)).all()
 
 
 def test_resize_bbox():

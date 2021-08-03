@@ -89,6 +89,33 @@ class BBox:
 
         return self
 
+    def crop_image(self, img: torch.Tensor, mode: str = 'floor', order: str = 'matplotlib'):
+        assert mode in ('ceil', 'floor')
+        assert order in (None, 'matplotlib')
+        assert len(self) == 1
+        assert img.dim() in (2, 3)
+
+        xyxy = self.xyxy.floor() if mode == 'floor' else self.xyxy.ceil()
+
+        img_bbox = BBox.__init__(xyxy, mode='xyxy')
+        img_bbox.limit_bbox(img_size=img.size(), )
+        xyxy[:2] = xyxy[:2].clamp(min=0)
+
+        if order == 'matplotlib':
+            xyxy = xyxy[[1, 0, 3, 2]]
+
+        xyxy[2] = xyxy[2].clamp(max=img.size(-2))
+        xyxy[3] = xyxy[3].clamp(max=img.size(-1))
+
+        xyxy = xyxy.long()
+
+        img = img[
+            ...,
+            slice(xyxy[0], xyxy[2]),
+            slice(xyxy[1], xyxy[3])
+        ]
+        return img, shift
+
     def repair_order(self):
         xyxy = self.xyxy
         xyxy[..., [0, 2]] = xyxy[..., [0, 2]].sort(dim=-1)[0]
