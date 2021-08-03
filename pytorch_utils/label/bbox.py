@@ -146,7 +146,8 @@ class BBox:
     def random_close(self, rel_dist: float):
         wh = self.cxcywh[..., 2:]
         cxcywh = self.cxcywh.clone()
-        cxcywh[..., :2] += (torch.rand_like(wh) - 0.5) * wh
+
+        cxcywh[..., :2] += (torch.rand_like(wh) - 0.5) * wh * rel_dist
 
         return BBox(cxcywh, 'cxcywh')
 
