@@ -44,6 +44,14 @@ class BBox:
     def __eq__(self, other) -> bool:
         return (self.xyxy == other.xyxy).all().item()
 
+    def __len__(self) -> int:
+        if self.xyxy.dim() == 1:
+            return 1
+        if self.xyxy.dim() == 2:
+            return self.xyxy.size(0)
+
+        raise ValueError("Not supported dim of underlying data.")
+
     def limit_bbox(self, img_size: torch.Size, eps_border=1e-6, order='matplotlib'):
         """
         Limit bounding boxes to image (size).
@@ -73,19 +81,6 @@ class BBox:
 
         self.cxcywh = self._square_bbox(self.cxcywh, mode=mode)
         return self
-
-    @staticmethod
-    @pytorch_utils.lazy.tensor.cycle_view(2, 0)
-    def _square_bbox(cxcywh: torch.Tensor, mode) -> torch.Tensor:
-        if cxcywh.dim() != 2:
-            raise ValueError
-
-        if mode == 'min':
-            cxcywh[:, 2:] = cxcywh[..., 2:].min(1, keepdim=True)[0].repeat(1, 2)
-        if mode == 'max':
-            cxcywh[:, 2:] = cxcywh[..., 2:].max(1, keepdim=True)[0].repeat(1, 2)
-
-        return cxcywh
 
     def shift_bbox_inside_img(self, img_size: torch.Size, eps_border=1e-6, order='matplotlib'):
         self.xyxy = shift_bbox_inside_img(
@@ -120,6 +115,19 @@ class BBox:
             raise ValueError("Bounding box(es) are outside of the specified image size.")
 
         return self
+
+    @staticmethod
+    @pytorch_utils.lazy.tensor.cycle_view(2, 0)
+    def _square_bbox(cxcywh: torch.Tensor, mode) -> torch.Tensor:
+        if cxcywh.dim() != 2:
+            raise ValueError
+
+        if mode == 'min':
+            cxcywh[:, 2:] = cxcywh[..., 2:].min(1, keepdim=True)[0].repeat(1, 2)
+        if mode == 'max':
+            cxcywh[:, 2:] = cxcywh[..., 2:].max(1, keepdim=True)[0].repeat(1, 2)
+
+        return cxcywh
 
 
 def convert_bbox(box: torch.Tensor, mode_in: str, mode_out: str) -> torch.Tensor:

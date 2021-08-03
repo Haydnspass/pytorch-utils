@@ -133,6 +133,7 @@ def test_resize_bbox():
     box_out = bbox.resize_boxes(box, (50, 20), 'xyxy')
     assert (box_out == torch.Tensor([-25, -10, 25, 10])).all()
 
+
 @pytest.mark.parametrize("mode,box_in,box_expct", [
     ("max", [1., 2., 3., 4.], [1., 2., 4., 4.]),
     ("min", [1., 2., 3., 4.], [1., 2., 3., 3.]),
