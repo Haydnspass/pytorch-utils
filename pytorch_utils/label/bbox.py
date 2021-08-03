@@ -52,7 +52,15 @@ class BBox:
 
         raise ValueError("Not supported dim of underlying data.")
 
-    def limit_bbox(self, img_size: torch.Size, eps_border=1e-6, order='matplotlib'):
+    def clone(self):
+        return BBox(self.xyxy, mode='xyxy')
+
+    def limit_bbox(self, img_size: torch.Size, eps_border=1e-6, order='matplotlib',
+                    check: bool = True):
+        return self.clone().limit_bbox(img_size, eps_border, order, check)
+
+    def limit_bbox_(self, img_size: torch.Size, eps_border=1e-6, order='matplotlib',
+                    check: bool = True):
         """
         Limit bounding boxes to image (size).
 

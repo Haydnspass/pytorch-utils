@@ -7,6 +7,18 @@ import torch
 from pytorch_utils.label import bbox
 
 
+def test_bbox_clone():
+
+    b = bbox.BBox([1., 2., 3., 4])
+    b_ref = b
+    b_clone = b.clone()
+
+    b_ref.xyxy = torch.Tensor([2., 3., 4., 5.])
+
+    assert (b.xyxy == torch.Tensor([2., 3., 4., 5.])).all()
+    assert (b_clone.xyxy == torch.Tensor([1., 2., 3., 4])).all()
+
+
 def test_bbox_eq():
 
     b0 = bbox.BBox([[1., 2., 3., 4.]], 'xyxy')
