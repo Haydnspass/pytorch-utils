@@ -24,7 +24,7 @@ def test_view_to_dim_expct():
 
 
 def test_view_to_dim_dec():
-    def _dummy(x):
+    def _dummy(arg1, x: torch.Tensor, **kwargs):
         if x.dim() != 2:
             raise ValueError
 
@@ -33,8 +33,8 @@ def test_view_to_dim_dec():
         dim=0,
         unsqueeze=True,
         squeeze=True,
-        arg=0
-    )(_dummy)(torch.rand(5))
+        arg=1
+    )(_dummy)(None, torch.rand(5))
 
 
 def test_cycle_view():
