@@ -37,3 +37,13 @@ def test_plot_keypoints():
 
     pytorch_utils.plot.plot.plot_keypoints(x, graph, ax=None)
     plt.show()
+
+
+@pytest.mark.graphic
+@pytest.mark.manual
+def test_plot_bbox():
+    # 2D
+    pytorch_utils.plot.plot.plot_bboxes(torch.rand(2, 4))
+
+     # 1D
+    pytorch_utils.plot.plot.plot_bboxes(torch.rand(4))

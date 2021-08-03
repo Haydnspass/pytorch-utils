@@ -5,6 +5,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 from .. import label
+from .. import lazy
 
 
 def tshow(t: torch.Tensor, autosqueeze: bool = False, ax=None, *args, **kwargs):
@@ -27,8 +28,9 @@ def tshow(t: torch.Tensor, autosqueeze: bool = False, ax=None, *args, **kwargs):
         return ax.imshow(t, *args, **kwargs)
 
 
-def plot_bboxes(boxes: torch.Tensor, scores: Optional[torch.Tensor] = None, box_mode='xyxy', order=None,
-                ax=None, patch_kwargs=None, annotate_kwargs=None):
+@lazy.tensor.view_to_dim_dec(2, 0, arg=0)
+def plot_bboxes(boxes: torch.Tensor, /, scores: Optional[torch.Tensor] = None,
+                box_mode='xyxy', order=None, ax=None, patch_kwargs=None, annotate_kwargs=None):
     """
     Plot bounding boxes on axis
 
@@ -38,7 +40,6 @@ def plot_bboxes(boxes: torch.Tensor, scores: Optional[torch.Tensor] = None, box_
         box_mode: either 'xyxy' or 'xywh'
         order: None (mpl default) or 'swapped'
         ax: axis
-
     """
 
     if patch_kwargs is None:
