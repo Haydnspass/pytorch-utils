@@ -60,6 +60,15 @@ def cycle(trafo_a: Optional[Callable], trafo_b: Optional[Callable],
     return decorator_cycle
 
 
+def torchify(arg: Optional[Union[int, str]]):
+    def _volatile_torchify(x):
+        if isinstance(x, torch.Tensor):
+            return x
+        return torch.from_numpy(x)
+
+    return cycle(_volatile_torchify, None, arg, None)
+
+
 def torch_np_cycle(arg: Optional[Union[int, str]] = 0, return_arg: Optional[int] = 0):
     """
     Decorator for numpy only functions that converts a tensor to np.ndarray,
