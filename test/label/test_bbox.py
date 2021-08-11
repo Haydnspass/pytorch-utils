@@ -158,8 +158,30 @@ def test_crop_image_unfilled(order, box, mode, img_expct, shift_expct):
     ([5.3, 3., 17., 20.], 'ceil', [11, 17], [6, 3])
 ])
 def test_crop_image_filled(order, box, mode, img_size, shift):
+    def _hard_coded_target_fills(box, mode, img_size):
+        """Construct target zero-fills from test parametrization."""
+        nz = torch.zeros(img_size, dtype=torch.bool)
+
+        if box == [1., 2., 3., 5.] and mode == 'floor':
+            pass
+        elif box == [-3.2, 2., 5., 7.] and mode == 'floor':
+            nz[:4] = 1
+        elif box == [5.3, 3., 17., 20.] and mode == 'ceil':
+            if order is None:
+                nz[4:] = 1
+                nz[:, 9:] = 1
+            elif order == 'matplotlib':
+                nz[6:] = 1
+                nz[:, 7:] = 1
+            else:
+                raise ValueError
+        else:
+            raise ValueError
+        return nz if order is None else nz.transpose(0, 1)
+
+    tar_fill = _hard_coded_target_fills(box, mode, img_size)
     box = bbox.BBox(box)
-    img = torch.rand(3, 10, 12)
+    img = torch.rand(3, 10, 12).clamp(min=0.1)
     shift = torch.tensor(shift)
 
     img_out, shift_out = box.crop_image(img, mode=mode, order=order, fill=0.)
@@ -169,6 +191,10 @@ def test_crop_image_filled(order, box, mode, img_size, shift):
 
     assert img_out[0].size() == torch.Size(img_size)
     assert (shift_out == shift).all()
+
+    # check that the correct side is filled with 0.
+    is_filled = img_out == 0
+    assert (is_filled == tar_fill).all()
 
 
 @pytest.mark.parametrize("box,box_expct", [
