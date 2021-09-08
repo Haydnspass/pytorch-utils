@@ -46,6 +46,16 @@ def test_torchify():
     cycle.torchify(0)(torch_only_func)(np.random.rand(5))
 
 
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="Makes no sense with only cpu")
+@pytest.mark.parametrize("device_in", ['cpu', 'cuda:0'])
+@pytest.mark.parametrize("device_out", ['cpu', 'cuda:0'])
+def test_device(device_in, device_out):
+    def device_only_func(x: torch.Tensor):
+        assert str(x.device) == device_out
+
+    cycle.auto_device(device_out, arg=0)(device_only_func)(torch.rand(5, device=device_in))
+
+
 def test_torch_np_cycle():
     def numpy_only_func(x):
         assert isinstance(x, np.ndarray)

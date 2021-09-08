@@ -69,6 +69,18 @@ def torchify(arg: Optional[Union[int, str]]):
     return cycle(_volatile_torchify, None, arg, None)
 
 
+def auto_device(device: Union[torch.device, str], arg: Optional[Union[int, str]] = 0):
+    """put a specific argument to a certain device"""
+    def _functional_to(d):
+        def _wrapped_to(x):
+            if x is not None:
+                return x.to(d)
+            return x
+        return _wrapped_to
+
+    return cycle(_functional_to(device), None, arg, None)
+
+
 def torch_np_cycle(arg: Optional[Union[int, str]] = 0, return_arg: Optional[int] = 0):
     """
     Decorator for numpy only functions that converts a tensor to np.ndarray,
