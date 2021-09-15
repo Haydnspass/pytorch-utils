@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
 
 import torch
 
@@ -105,7 +105,20 @@ class BBox:
         return self
 
     def crop_image(self, img: torch.Tensor, *,
-                   fill: Optional[float]= None, mode: str = 'floor', order: str = 'matplotlib'):
+                   fill: Optional[float] = None, mode: str = 'floor', order: str = 'matplotlib'):
+        """
+        Crop image by bounding box
+
+        Args:
+            img: image
+            fill: value that should be used to fill should the box be larger than the image
+            mode: floor / ceil bbox coordinates before cropping
+            order: matplotlib or None convention
+
+        Returns:
+            cropped image
+            shift
+        """
         assert mode in ('ceil', 'floor')
         assert order in (None, 'matplotlib')
         assert len(self) == 1

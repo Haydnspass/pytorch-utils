@@ -9,7 +9,6 @@ from pytorch_utils.label import bbox
 
 
 def test_bbox_clone():
-
     b = bbox.BBox([1., 2., 3., 4])
     b_ref = b
     b_clone = b.clone()
@@ -21,7 +20,6 @@ def test_bbox_clone():
 
 
 def test_bbox_eq():
-
     b0 = bbox.BBox([[1., 2., 3., 4.]], 'xyxy')
     b1 = bbox.BBox([[2., 3., 2., 2.]], 'cxcywh')
 
@@ -68,10 +66,10 @@ def test_check_bbox_fits_img(box, expct):
     ('xywh', 'xywh'),
 ])
 def test_convert_bbox(mode_in, mode_out):
-
     with mock.patch.object(bbox, '_bbox_arbitrary_to_xyxy') as arb_to_xyxy:
         with mock.patch.object(bbox, '_bbox_xyxy_to_arbitrary') as xyxy_to_arb:
-            bbox.convert_bbox(torch.LongTensor([[1., 2., 3., 4.]]), mode_in=mode_in, mode_out=mode_out)
+            bbox.convert_bbox(torch.LongTensor([[1., 2., 3., 4.]]), mode_in=mode_in,
+                              mode_out=mode_out)
 
     if mode_in == mode_out:
         xyxy_to_arb.assert_not_called()
@@ -111,7 +109,6 @@ _scenarios_1d = [
 @pytest.mark.parametrize("x,x_expct", _scenarios_1d)
 @pytest.mark.parametrize("y,y_expct", _scenarios_1d)
 def test_shift_bbox_inside_img(x, x_expct, y, y_expct):
-
     box = [x[0], y[0], x[1], y[1]]
 
     if x_expct == 'err' or y_expct == 'err':
@@ -139,7 +136,7 @@ def test_shift_bbox_inside_img(x, x_expct, y, y_expct):
 ])
 def test_crop_image_unfilled(order, box, mode, img_expct, shift_expct):
     box = bbox.BBox(box)
-    img = torch.rand(3, 64, 64)
+    img = torch.rand(3, 64, 69)
     shift_expct = torch.tensor(shift_expct)
 
     img_out, shift_out = box.crop_image(img, mode=mode, order=order)
@@ -218,7 +215,8 @@ def test_resize_bbox():
 @pytest.mark.parametrize("mode,box_in,box_expct", [
     ("max", [1., 2., 3., 4.], [1., 2., 4., 4.]),
     ("min", [1., 2., 3., 4.], [1., 2., 3., 3.]),
-    ("max", [[1., 2., 3., 4.], [-500., -1200., 899., 283]], [[1., 2., 4., 4.], [-500., -1200., 899., 899.]])
+    ("max", [[1., 2., 3., 4.], [-500., -1200., 899., 283]],
+     [[1., 2., 4., 4.], [-500., -1200., 899., 899.]])
 ])
 def test_square_boxes(mode, box_in, box_expct):
     box = bbox.BBox(box_in, mode='cxcywh')
@@ -243,7 +241,6 @@ def test_random_close_bbox():
     (torch.Tensor([[1., 2., 3., 4.]]), 'cxcywh', torch.Tensor([[-.5, 0, 2.5, 4.]])),
 ])
 def test__bbox_arbitrary_to_xyxy(box, mode, box_expct):
-
     box_out = bbox._bbox_arbitrary_to_xyxy(box, mode=mode)
     assert (box_out == box_expct).all()
 
@@ -254,13 +251,11 @@ def test__bbox_arbitrary_to_xyxy(box, mode, box_expct):
     (torch.Tensor([[1., 2., 3., 4.]]), 'cxcywh', torch.Tensor([[2., 3., 2., 2.]])),
 ])
 def test__bbox_xyxy_to_arbitrary(box, mode, box_expct):
-
     box_out = bbox._bbox_xyxy_to_arbitrary(box, mode=mode)
     assert (box_out == box_expct).all()
 
 
 def test_auto_inflate():
-
     box = torch.Tensor([1., 2., 3., 4.])  # 1D box
 
     bbox._bbox_arbitrary_to_xyxy(box, mode='xywh')
