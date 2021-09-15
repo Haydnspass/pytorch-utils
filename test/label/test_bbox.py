@@ -235,6 +235,23 @@ def test_random_close_bbox():
     assert (box_rand.cxcywh[:2] <= torch.Tensor([20., 40.])).all()
 
 
+def test_random_zoom_bbox():
+    box = bbox.BBox([1., 2., 3., 4], mode='cxcywh')
+    zoom_range = (0.5, 3)
+    box_rand = box.random_zoom(*zoom_range)
+
+    assert np.array_equal(
+        box_rand.cxcywh[..., :2],
+        box.cxcywh[..., :2]
+    ), "Centers must not change"
+    assert pytest.approx(
+        box_rand.cxcywh[..., 2] / box.cxcywh[..., 2],
+        box_rand.cxcywh[..., 3] / box.cxcywh[..., 3]
+    ), "Zoom must be equivalent in w and h"
+    assert zoom_range[0] <= (box_rand.cxcywh[..., 2] / box.cxcywh[..., 2]) <= zoom_range[1], \
+        "Zoom factor outside range"
+
+
 @pytest.mark.parametrize("box,mode,box_expct", [
     (torch.Tensor([[1., 2., 3., 4.]]), 'xyxy', torch.Tensor([[1., 2., 3., 4.]])),
     (torch.Tensor([[1., 2., 3., 4.]]), 'xywh', torch.Tensor([[1., 2., 4., 6.]])),

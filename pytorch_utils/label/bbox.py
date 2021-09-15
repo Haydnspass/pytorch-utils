@@ -164,6 +164,24 @@ class BBox:
 
         return BBox(cxcywh, 'cxcywh')
 
+    def random_zoom(self, zoom_lower: float, zoom_upper: float):
+        """
+        Zoom in/out while keeping center constant. Zoom value of 1 means no change.
+
+        Args:
+            zoom_lower: lower zoom value
+            zoom_upper: upper zoom value
+
+        Returns:
+            BBox
+        """
+        spread = zoom_upper - zoom_lower
+
+        cxcywh = self.cxcywh.clone()
+        cxcywh[..., 2:] *= torch.rand(1).item() * spread + zoom_lower
+
+        return BBox(cxcywh, 'cxcywh')
+
     def repair_order(self):
         xyxy = self.xyxy
         xyxy[..., [0, 2]] = xyxy[..., [0, 2]].sort(dim=-1)[0]
