@@ -92,3 +92,27 @@ def invert_permutation(*dims: int) -> List[int]:
 def inverse_permute(t: torch.Tensor, dims):
     """Convenience function to invert a known permutation on a tensor."""
     return t.permute(*invert_permutation(*dims))
+
+
+@cycle_view(4, 0)
+def _to_chw(x: torch.Tensor):
+    return x.permute(0, -1, 1, 2)
+
+
+@cycle_view(4, 0)
+def _to_hwc(x: torch.Tensor):
+    return x.permute(0, 2, 3, 1)
+
+
+def chw_hwc_cycle(arg: Optional[Union[int, str]] = 0, return_arg: Optional[int] = 0):
+    """
+    Decorator. Changes channel convention from NxHxWxC to NxCxHxW
+    """
+    return cycle.cycle(_to_hwc, _to_chw, arg, return_arg)
+
+
+def hwc_chw_cycle(arg: Optional[Union[int, str]] = 0, return_arg: Optional[int] = 0):
+    """
+    Decorator. Changes channel convention from NxCxHxW to NxHxWxC
+    """
+    return cycle.cycle(_to_chw, _to_hwc, arg, return_arg)

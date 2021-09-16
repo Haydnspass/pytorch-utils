@@ -77,3 +77,25 @@ def test_invert_permutation(p_in, p_expct):
 
     mock_permute.assert_called_once_with(*p_expct)
 
+
+@pytest.mark.parametrize("a,b", [
+    ([3, 4, 5], [4, 5, 3]),
+    ([2, 3, 4, 5], [2, 4, 5, 3]),
+    ([9, 3, 38, 2], [9, 38, 2, 3])
+])
+def test_chw_hwc_reverse(a, b):
+    @lazy.tensor.hwc_chw_cycle()
+    def _chw(x):
+        assert x.size(-3) == 3
+        return x
+
+    @lazy.tensor.chw_hwc_cycle()
+    def _hwc(x):
+        assert x.size(-1) == 3
+        return x
+
+    x = _chw(torch.rand(*b))
+    assert x.size() == torch.Size(b)
+    x = _hwc(torch.rand(*a))
+    assert x.size() == torch.Size(a)
+
