@@ -30,8 +30,9 @@ def tshow(t: torch.Tensor, autosqueeze: bool = False, ax=None, *args, **kwargs):
 
 
 @lazy.cycle.torchify(0)
+@lazy.cycle.auto_device('cpu', 0)
 @lazy.tensor.view_to_dim_dec(2, 0, arg=0)
-def plot_bboxes(boxes: torch.Tensor, /, scores: Optional[torch.Tensor] = None,
+def plot_bboxes(boxes: torch.Tensor, /, scores: Optional[torch.Tensor] = None, *,
                 box_mode='xyxy', order=None, ax=None, patch_kwargs=None, annotate_kwargs=None):
     """
     Plot bounding boxes on axis

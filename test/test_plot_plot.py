@@ -44,6 +44,8 @@ def test_plot_keypoints():
 def test_plot_bbox():
     # 2D
     pytorch_utils.plot.plot.plot_bboxes(torch.rand(2, 4))
+    plt.show()
 
      # 1D
     pytorch_utils.plot.plot.plot_bboxes(torch.rand(4))
+    plt.show()
