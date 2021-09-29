@@ -24,8 +24,9 @@ def test_tshow():
 
 @pytest.mark.graphic
 @pytest.mark.manual
-def test_plot_keypoints():
-    x = torch.rand(5, 2)
+@pytest.mark.parametrize("plot_3d", [True, False])
+def test_plot_keypoints(plot_3d):
+    x = torch.rand(5, 3)
 
     graph = [
         (0, 1),
@@ -35,7 +36,13 @@ def test_plot_keypoints():
         (5, None),
     ]
 
-    pytorch_utils.plot.plot.plot_keypoints(x, graph, ax=None)
+    if plot_3d:
+        f = plt.figure()
+        ax = f.add_subplot(projection='3d')
+    else:
+        ax = None
+
+    pytorch_utils.plot.plot.plot_keypoints(x, graph, ax=ax, plot_3d=plot_3d)
     plt.show()
 
 

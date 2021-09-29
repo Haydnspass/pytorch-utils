@@ -76,7 +76,7 @@ def plot_bboxes(boxes: torch.Tensor, /, scores: Optional[torch.Tensor] = None, *
 
 @lazy.cycle.torchify(0)
 def plot_keypoints(keypoints: torch.Tensor, graph: Optional[List[tuple]] = None, plot_ix=True,
-                   ix_prefix: str = '', ax=None):
+                   ix_prefix: str = '', ax=None, plot_3d: bool = False):
     if ax is None:
         ax = plt.gca()
 
@@ -85,13 +85,26 @@ def plot_keypoints(keypoints: torch.Tensor, graph: Optional[List[tuple]] = None,
     if graph is not None:
         for k, v in graph:
             if v is not None:
-                ax.plot(keypoints[[k, v], 0], keypoints[[k, v], 1], 'blue')
+                if not plot_3d:
+                    ax.plot(keypoints[[k, v], 0], keypoints[[k, v], 1], color='blue')
+                else:
+                    ax.plot(
+                        keypoints[[k, v], 0],
+                        keypoints[[k, v], 1],
+                        keypoints[[k, v], 2],
+                        color='blue')
 
-    ax.plot(keypoints[:, 0], keypoints[:, 1], 'ro')
+    if not plot_3d:
+        ax.plot(keypoints[:, 0], keypoints[:, 1], 'ro')
+    else:
+        ax.plot(keypoints[:, 0], keypoints[:, 1], keypoints[:, 2], 'ro')
 
     if plot_ix:
         for i, kp in enumerate(keypoints):
-            ax.text(kp[0], kp[1], ix_prefix + str(i))
+            if not plot_3d:
+                ax.text(kp[0], kp[1], ix_prefix + str(i))
+            else:
+                ax.text(kp[0], kp[1], kp[2], ix_prefix + str(i))
 
     return ax
 
