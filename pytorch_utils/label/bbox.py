@@ -41,6 +41,10 @@ class BBox:
     def area(self):
         return self.xywh[..., 2] * self.xywh[..., 3]
 
+    def __getitem__(self, item):
+        # raise NotImplementedError
+        return BBox(self.xyxy[item], mode='xyxy')
+
     def __eq__(self, other) -> bool:
         return (self.xyxy == other.xyxy).all().item()
 
