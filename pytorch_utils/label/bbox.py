@@ -88,6 +88,13 @@ class BBox:
 
         return self
 
+    def flip_xy_(self):
+        self.xyxy = self.xyxy[..., [1, 0, 3, 2]]
+        return self
+
+    def flip_xy(self):
+        return self.clone().flip_xy_()
+
     def square_bbox(self, mode: str = 'max'):
         return self.clone().square_bbox_(mode)
 
@@ -177,7 +184,10 @@ class BBox:
             mode:
             order:
         """
-        raise NotImplementedError
+        self._fill_crop_checks(img, mode, order)
+        bbox_img = self.limit_bbox(img.size())
+        bbox_img_rel_fill = BBox(bbox_img.xyxy - self.xyxy, mode='xyxy')
+        fill = bbox_img_rel_fill.crop_image(fill)
 
     def random_close(self, rel_dist: float):
         wh = self.cxcywh[..., 2:]

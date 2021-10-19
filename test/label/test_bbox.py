@@ -80,6 +80,17 @@ def test_convert_bbox(mode_in, mode_out):
 
 
 @pytest.mark.parametrize("box,box_expct", [
+    ([1., 2., 3., 4], [2., 1., 4., 3.]),
+    ([[1., 2., 3., 4.], [5., 6., 7., 8.]], [[2., 1., 4., 3.], [6., 5., 8., 7.]]),
+])
+def test_flip_xy(box, box_expct):
+    box = bbox.BBox(box)
+    box_expct = bbox.BBox(box_expct)
+
+    assert box.flip_xy() == box_expct
+
+
+@pytest.mark.parametrize("box,box_expct", [
     ([[-5., -10, 3, 7]], [[0., 0., 3, 7]]),
     ([[0., 0., 31.99, 39.99]], [[0., 0., 31.99, 39.99]]),
     ([-5, -1, 100, 200], [0., 0., 32 - 1e-6, 40 - 1e-6]),
@@ -194,10 +205,14 @@ def test_crop_image_filled(order, box, mode, img_size, shift):
     assert (is_filled == tar_fill).all()
 
 
-@pytest.mark.skip("Not yet implemented.")
+@pytest.mark.parametrize("box", [
+    [1., 1., 3., 3.]
+])
 @pytest.mark.parametrize("order", [None, "matplotlib"])
-def test_fill_box(order):
-    pass
+def test_fill_box(box, order):
+    box = bbox.BBox(box)
+
+    box.fill_box(torch.ones(2, 2), torch.zeros(10, 15))
 
 
 @pytest.mark.parametrize("box,box_expct", [
