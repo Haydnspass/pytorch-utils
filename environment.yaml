@@ -15,6 +15,7 @@ dependencies:
   - pyyaml
   - scikit-learn
   - deprecated
+  - pydantic
 
   # developer
   - bump2version
