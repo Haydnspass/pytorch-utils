@@ -194,6 +194,12 @@ def test_crop_image_filled(order, box, mode, img_size, shift):
     assert (is_filled == tar_fill).all()
 
 
+@pytest.mark.skip("Not yet implemented.")
+@pytest.mark.parametrize("order", [None, "matplotlib"])
+def test_fill_box(order):
+    pass
+
+
 @pytest.mark.parametrize("box,box_expct", [
     ([1., 2., 3., 4.], [1., 2., 3., 4.]),
     ([3., 4., 1., 2.], [1., 2., 3., 4.])

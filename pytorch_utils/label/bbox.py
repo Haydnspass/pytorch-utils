@@ -104,6 +104,16 @@ class BBox:
 
         return self
 
+    def _fill_crop_checks(self, img, mode, order):
+        if not img.dim() in (2, 3):
+            raise ValueError
+        if mode not in ('ceil', 'floor'):
+            raise ValueError
+        if order not in (None, 'matplotlib'):
+            raise ValueError
+        if not len(self) == 1:
+            raise ValueError
+
     def crop_image(self, img: torch.Tensor, *,
                    fill: Optional[float] = None, mode: str = 'floor', order: str = 'matplotlib'):
         """
@@ -119,10 +129,7 @@ class BBox:
             cropped image
             shift
         """
-        assert mode in ('ceil', 'floor')
-        assert order in (None, 'matplotlib')
-        assert len(self) == 1
-        assert img.dim() in (2, 3)
+        self._fill_crop_checks(img, mode, order)
 
         xy_px = self.xyxy.floor() if mode == 'floor' else self.xyxy.ceil()
 
@@ -155,6 +162,18 @@ class BBox:
             img = torch.nn.functional.pad(img, margins[[1, 3, 0, 2]].tolist(), mode='constant', value=fill)
 
         return img, shift
+
+    def fill_box(self, fill: torch.Tensor, img: torch.Tensor, mode: str = 'floor', order: str = 'matplotlib'):
+        """
+        Fill bounding box in an image by some content. Convenience method.
+
+        Args:
+            fill:
+            img:
+            mode:
+            order:
+        """
+        raise NotImplementedError
 
     def random_close(self, rel_dist: float):
         wh = self.cxcywh[..., 2:]
