@@ -41,6 +41,12 @@ class BBox:
     def area(self):
         return self.xywh[..., 2] * self.xywh[..., 3]
 
+    def is_square(self):
+        s = self.xywh[..., -1] == self.xywh[..., -2]
+        if s.dim() == 0:
+            return s.item()
+        return s
+
     def __getitem__(self, item):
         # raise NotImplementedError
         return BBox(self.xyxy[item], mode='xyxy')
@@ -311,7 +317,7 @@ def shift_bbox_inside_img(box, img_size: torch.Size,
 
     BBox(box_xyxy, mode='xyxy').check_fits_img(
         img_size=img_size,
-        order='matplotlib',  # cause this was ensured earlier
+        order=None,  # cause this was ensured earlier
         eps_border=eps_border,
     )
     box_out = convert_bbox(box_xyxy, 'xyxy', mode)

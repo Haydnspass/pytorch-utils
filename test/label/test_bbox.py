@@ -43,6 +43,21 @@ def test_check_bbox_area(box, expct):
     assert str(err.value) == expct
 
 
+@pytest.mark.parametrize("xywh,square", [
+    ([0., 0., 1., 2.], False),
+    ([0., 0., 1., 1.], True),
+    ([[0., 0., 1., 1.], [0., 0., 2., 3.]], [True, False])
+])
+def test_is_square(xywh, square):
+    box = bbox.BBox(xywh, 'xywh')
+    s = box.is_square()
+
+    if isinstance(square, bool):
+        assert s == square
+    else:
+        assert (s == torch.BoolTensor(square)).all()
+
+
 @pytest.mark.parametrize("box,expct", [
     ([10, 20, 20, 40], None),
     ([10, 30, 20, 80], 'Bounding box(es) are outside of the specified image size.')
@@ -136,6 +151,12 @@ def test_shift_bbox_inside_img(x, x_expct, y, y_expct):
             decimal=5,
         )
 
+
+def test_shift_bbox_inside_img_manual():
+    box = bbox.BBox([461.8641, -23.5828, 941.2914, 455.8445])
+    box_out = box.shift_bbox_inside_img((720, 1280), order='matplotlib')
+
+    print(box_out.xyxy)
 
 @pytest.mark.parametrize("order", [None, 'matplotlib'])
 @pytest.mark.parametrize("box,mode,img_expct,shift_expct", [
