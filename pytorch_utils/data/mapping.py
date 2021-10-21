@@ -35,10 +35,10 @@ class FileMappedTensor(ABC):
         raise NotImplementedError
 
 
-class MultiMappedTensor(FileMappedTensor):
+class MultiMapped(FileMappedTensor):
     def __init__(self, files: Union[list, tuple, dict], loader: Callable):
         """
-        Map multiple files to single pytorch tensor (e.g. a list of .png files).
+        Map multiple files to a getitem list.
 
         Args:
             files: paths
@@ -50,27 +50,44 @@ class MultiMappedTensor(FileMappedTensor):
         self._files = files
         self._loader = loader
 
-    def size(self, dim: Optional[int] = None):
-        s = torch.Size([len(self), *self[0].size()])
-        return s[dim] if dim is not None else s
-
     def __len__(self):
         return len(self._files)
 
     def _load(self, pos) -> torch.Tensor:
         if isinstance(pos, int):
             pos = (pos, )
-            squeeze_batch_dim = True
+            squeeze = True
         else:
             pos = torch.arange(len(self))[pos]
-            squeeze_batch_dim = False
+            squeeze = False
 
-        data = torch.stack([self._loader(self._files[k]) for k in pos], 0)
+        data = [self._loader(self._files[k]) for k in pos]
+        return data if not squeeze else data[0]
 
-        if squeeze_batch_dim:
-            return data.squeeze(0)
-        else:
+
+class MultiMappedTensor(MultiMapped):
+    def __init__(self, files: Union[list, tuple, dict], loader: Callable):
+        """
+        Map multiple files to single pytorch tensor (e.g. a list of .png files).
+
+        Args:
+            files: paths
+            loader: callable that is able to load an individual file and returns a tensor
+
+        """
+        super().__init__(files=files, loader=loader)
+
+    def size(self, dim: Optional[int] = None):
+        s = torch.Size([len(self), *self[0].size()])
+        return s[dim] if dim is not None else s
+
+    def _load(self, pos) -> torch.Tensor:
+        data = super()._load(pos)
+
+        if isinstance(pos, int):
             return data
+        else:
+            return torch.stack(data, 0)
 
 
 class Delayed:

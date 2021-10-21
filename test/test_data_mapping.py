@@ -32,6 +32,14 @@ def sample_pngs(tmpdir):
     return img_dir
 
 
+@pytest.fixture
+def sample_pngs_discontinous(sample_pngs):
+    for ix in [2, 8]:
+        (sample_pngs / f"sample_{ix}.png").unlink(missing_ok=False)
+
+    return sample_pngs
+
+
 class _TestFileMappedTensor(ABC):
 
     def test_load(self, tensor):
@@ -39,12 +47,36 @@ class _TestFileMappedTensor(ABC):
         assert isinstance(tensor._load(1), torch.Tensor), "Failed on single index load."
         assert isinstance(tensor._load(slice(1, 10, 2)), torch.Tensor), "Failed on sliced load."
 
-    def test_getitem(self, tensor):
+    def test_getitem_singular(self, tensor):
 
         assert isinstance(tensor[1], torch.Tensor), "Failed on single index getitem"
         assert isinstance(tensor[1, 10:20, 5:30], torch.Tensor), "Failed on single index getitem followed by slice"
+
+    def test_getitem_slice(self, tensor):
         assert isinstance(tensor[1:5], torch.Tensor), "Failed on sliced index"
         assert isinstance(tensor[1:5, 10:20, 5:30], torch.Tensor), "Failed on sliced index followed by slice"
+
+
+class TestMultiMappedList(_TestFileMappedTensor):
+    @pytest.fixture()
+    def tensor(self, sample_pngs_discontinous):
+        def loader(f):
+            if f.is_file():
+                return torch.from_numpy(plt.imread(f))
+            else:
+                return None
+
+        return mapping.MultiMapped([sample_pngs_discontinous / f"sample_{i}.png" for i in range(10)], loader)
+
+    def test_len(self, tensor, sample_pngs_discontinous):
+        assert len(tensor) == 10
+
+    def test_load(self, tensor):
+        assert isinstance(tensor._load(0), torch.Tensor)
+        assert tensor._load(2) is None
+
+    def test_getitem_slice(self, tensor):
+        return
 
 
 class TestMultiMappedTensor(_TestFileMappedTensor):
