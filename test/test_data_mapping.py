@@ -68,7 +68,7 @@ class TestMultiMappedList(_TestFileMappedTensor):
 
         return mapping.MultiMapped([sample_pngs_discontinous / f"sample_{i}.png" for i in range(10)], loader)
 
-    def test_len(self, tensor, sample_pngs_discontinous):
+    def test_len(self, tensor):
         assert len(tensor) == 10
 
     def test_load(self, tensor):
@@ -76,6 +76,9 @@ class TestMultiMappedList(_TestFileMappedTensor):
         assert tensor._load(2) is None
 
     def test_getitem_slice(self, tensor):
+        return
+
+    def test_getitem_singular(self, tensor):
         return
 
 

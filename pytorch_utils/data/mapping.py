@@ -42,7 +42,7 @@ class MultiMapped(FileMappedTensor):
 
         Args:
             files: paths
-            loader: callable that is able to load an individual file and returns a tensor
+            loader: callable that is able to load an individual file and returns any
 
         """
         super().__init__(file=None)
@@ -52,6 +52,9 @@ class MultiMapped(FileMappedTensor):
 
     def __len__(self):
         return len(self._files)
+
+    def __getitem__(self, pos):
+        return self._load(pos)
 
     def _load(self, pos) -> torch.Tensor:
         if isinstance(pos, int):
@@ -76,6 +79,9 @@ class MultiMappedTensor(MultiMapped):
 
         """
         super().__init__(files=files, loader=loader)
+
+    def __getitem__(self, pos) -> torch.Tensor:
+        return FileMappedTensor.__getitem__(self, pos)
 
     def size(self, dim: Optional[int] = None):
         s = torch.Size([len(self), *self[0].size()])
