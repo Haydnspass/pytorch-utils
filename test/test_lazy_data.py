@@ -1,3 +1,4 @@
+from hypothesis import given, strategies
 import torch
 import pytest
 from unittest import mock
@@ -20,3 +21,18 @@ def test_fract_random_split(ds_len, val_fraction, expct):
         _ = lazy.data.fract_random_split(ds, val_fraction, generator='dummy')
 
     mock_split.assert_called_once_with(ds, expct, generator='dummy')
+
+
+@given(strategies.lists(strategies.integers(min_value=0, max_value=500), min_size=10))
+def test_split_to_fill(vals):
+    try:
+        mask, n = lazy.data.split_to_fill(vals, 500, 100, 100)
+        assert 500 <= n <= 500 + 100
+        assert isinstance(mask, torch.BoolTensor)
+    except ValueError as err:
+        if str(err) == "Failed because there are no elements left.":
+            return
+        if str(err) == "Failed because of overshot tolerance.":
+            return
+        assert False
+
