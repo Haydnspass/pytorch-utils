@@ -226,6 +226,13 @@ def test_crop_image_filled(order, box, mode, img_size, shift):
     assert (is_filled == tar_fill).all()
 
 
+def test_crop_image_int_tensor():
+    box = bbox.BBox(torch.LongTensor([1, 2, 3, 4]))
+    img_out, _ = box.crop_image(torch.rand(3, 64, 128))
+
+    assert img_out.size() == torch.Size([3, 2, 2])
+
+
 @pytest.mark.parametrize("box", [
     [1., 1., 3., 3.]
 ])

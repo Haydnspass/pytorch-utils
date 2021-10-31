@@ -139,7 +139,7 @@ class BBox:
         Args:
             img: image
             fill: value that should be used to fill should the box be larger than the image
-            mode: floor / ceil bbox coordinates before cropping
+            mode: floor / ceil bbox coordinates before cropping (ignored for integer type tensors)
             order: matplotlib or None convention
 
         Returns:
@@ -148,7 +148,10 @@ class BBox:
         """
         self._fill_crop_checks(img, mode, order)
 
-        xy_px = self.xyxy.floor() if mode == 'floor' else self.xyxy.ceil()
+        if not isinstance(self.xyxy, (torch.LongTensor, torch.ShortTensor, torch.IntTensor)):
+            xy_px = self.xyxy.floor() if mode == 'floor' else self.xyxy.ceil()
+        else:
+            xy_px = self.xyxy
 
         crop_box = BBox(xy_px, mode='xyxy')
         crop_lim_box = crop_box.limit_bbox(img_size=img.size(), eps_border=0., order=order, check=False)
