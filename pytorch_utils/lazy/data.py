@@ -53,7 +53,7 @@ def split_to_fill(values, n_tar: int, n_tol: int, n_tol_elem: int, order="random
     mask = torch.zeros(len(values), dtype=torch.bool).numpy()
 
     n = 0
-    while (n_tar - n) > 0:
+    while abs(n_tar - n) > n_tol:
         ix = ix_total.pop(0)
         if n_tol_elem is None or values[ix] <= n_tol_elem:
             mask[ix] = True
