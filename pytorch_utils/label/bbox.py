@@ -304,10 +304,18 @@ def shift_bbox_inside_img(box, img_size: torch.Size,
         -box_xyxy[:, :2],
         torch.zeros_like(box_xyxy[:, :2])
     )
-    shift_max = torch.min(
-        (img_size - eps_border) - box_xyxy[:, 2:],
-        torch.zeros_like(box_xyxy[:, :2])
-    )
+    if not isinstance(box_xyxy, (torch.IntTensor, torch.ShortTensor, torch.LongTensor)):
+        shift_max = torch.min(
+            (img_size - eps_border) - box_xyxy[:, 2:],
+            torch.zeros_like(box_xyxy[:, :2])
+        )
+    else:
+        raise NotImplementedError
+        img_size = img_size.long()
+        shift_max = torch.min(
+            (img_size - 1) - box_xyxy[:, 2:],
+            torch.zeros_like(box_xyxy[:, :2])
+        )
 
     # shifts must not be non-zero at the same positions
     if (shift_min * shift_max).any():

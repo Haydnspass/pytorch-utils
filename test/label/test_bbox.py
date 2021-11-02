@@ -156,7 +156,14 @@ def test_shift_bbox_inside_img_manual():
     box = bbox.BBox([461.8641, -23.5828, 941.2914, 455.8445])
     box_out = box.shift_bbox_inside_img((720, 1280), order='matplotlib')
 
-    print(box_out.xyxy)
+    # box = bbox.BBox(torch.LongTensor([-1, 0, 2, 3]))
+    # img_out, _ = box.shift_bbox_inside_img((32, 64)).crop_image(torch.rand(1, 32, 64))
+    # assert img_out.size() == torch.Size([1, 3, 3])
+    #
+    # box = bbox.BBox(torch.LongTensor([5, 7, 1, 4]))
+    # img_out, _ = box.shift_bbox_inside_img((6, 10), order=None).crop_image(torch.rand(1, 6, 10), order=None)
+    # assert img_out.size() == torch.Size([2, 3])
+
 
 @pytest.mark.parametrize("order", [None, 'matplotlib'])
 @pytest.mark.parametrize("box,mode,img_expct,shift_expct", [
