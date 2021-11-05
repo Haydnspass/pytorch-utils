@@ -9,14 +9,18 @@ from pytorch_utils.label import bbox
 
 
 def test_bbox_clone():
-    b = bbox.BBox([1., 2., 3., 4])
+    b = bbox.BBox([1., 2., 3., 4], scores=torch.Tensor([0.7]))
     b_ref = b
     b_clone = b.clone()
 
     b_ref.xyxy = torch.Tensor([2., 3., 4., 5.])
+    b_ref.scores = torch.Tensor([0.8])
 
     assert (b.xyxy == torch.Tensor([2., 3., 4., 5.])).all()
+    assert (b.scores == torch.Tensor([0.8])).all()
+
     assert (b_clone.xyxy == torch.Tensor([1., 2., 3., 4])).all()
+    assert (b_clone.scores == torch.Tensor([0.7])).all()
 
 
 def test_bbox_eq():
@@ -25,6 +29,24 @@ def test_bbox_eq():
 
     assert isinstance(b0 == b1, bool)
     assert b0 == b1
+
+    b1.scores = torch.Tensor([0.5])
+    assert not b0 == b1
+    b0.scores = b1.scores
+    assert b0 == b1
+
+
+@pytest.mark.parametrize("scores", [None, [1, 2, 3, 4]])
+def test_bbox_to_from_dict(scores):
+    xyxy = torch.rand(25, 4)
+    scores = torch.Tensor(scores) if scores is not None else None
+
+    b = bbox.BBox(xyxy, 'xyxy', scores=scores)
+
+    b_as_dict = b.to_dict()
+    b_from_dict = bbox.BBox.from_dict(b_as_dict)
+
+    assert b_from_dict == b
 
 
 @pytest.mark.parametrize("box,expct", [

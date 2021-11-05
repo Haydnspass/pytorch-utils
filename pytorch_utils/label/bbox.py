@@ -6,12 +6,13 @@ import pytorch_utils.lazy.tensor
 
 
 class BBox:
-    def __init__(self, data: torch.Tensor, mode: str = 'xyxy'):
+    def __init__(self, data: torch.Tensor, mode: str = 'xyxy', scores: Optional[torch.Tensor] = None):
         self._data = convert_bbox(
             data.clone() if isinstance(data, torch.Tensor) else torch.Tensor(data),
             mode_in=mode,
             mode_out='xyxy'
         )
+        self.scores = scores
 
     @property
     def xyxy(self):
@@ -48,11 +49,20 @@ class BBox:
         return s
 
     def __getitem__(self, item):
-        # raise NotImplementedError
-        return BBox(self.xyxy[item], mode='xyxy')
+        s = self.scores[item] if self.scores is not None else None
+        return BBox(self.xyxy[item], mode='xyxy', scores=s)
 
     def __eq__(self, other) -> bool:
-        return (self.xyxy == other.xyxy).all().item()
+        eq = True
+        eq *= (self.xyxy == other.xyxy).all().item()
+        if self.scores is not None and other.scores is not None:
+            eq *= (self.scores == other.scores).all().item()
+        elif self.scores is None and other.scores is None:
+            pass
+        else:
+            eq = False
+
+        return bool(eq)
 
     def __len__(self) -> int:
         if self.xyxy.dim() == 1:
@@ -63,7 +73,7 @@ class BBox:
         raise ValueError("Not supported dim of underlying data.")
 
     def clone(self):
-        return BBox(self.xyxy, mode='xyxy')
+        return BBox(self.xyxy, mode='xyxy', scores=self.scores)
 
     def limit_bbox(self, img_size: torch.Size, eps_border=1e-6, order='matplotlib',
                     check: bool = True):
@@ -250,6 +260,17 @@ class BBox:
             raise ValueError("Bounding box(es) are outside of the specified image size.")
 
         return self
+
+    def to_dict(self):
+        return {
+            "data": self.xyxy,
+            "scores": self.scores,
+            "mode": "xyxy",
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict):
+        return cls(data=data["data"], mode=data["mode"], scores=data["scores"])
 
     @staticmethod
     @pytorch_utils.lazy.tensor.cycle_view(2, 0)
