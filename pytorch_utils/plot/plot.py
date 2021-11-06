@@ -69,6 +69,7 @@ def plot_bboxes(boxes: torch.Tensor, /, scores: Optional[torch.Tensor] = None, *
             cx = rx
             cy = ry + r.get_height()
 
+            scores = scores.unsqueeze(0) if scores.dim() == 0 else scores
             ax.annotate(f'p: {scores[i]:.2f}', (cx, cy), **annotate_kwargs)
 
     return ax
