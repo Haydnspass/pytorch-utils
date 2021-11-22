@@ -16,6 +16,7 @@ dependencies:
   - scikit-learn
   - deprecated
   - pydantic
+  - pandas
 
   # developer
   - bump2version
