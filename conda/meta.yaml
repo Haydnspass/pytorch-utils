@@ -1,6 +1,6 @@
 package:
   name: pytorch_utils
-  version: "0.1.0"  # DO NOT MODIFY BY HAND; see DEVELOPER.md
+  version: "0.1.0post0"  # DO NOT MODIFY BY HAND; see DEVELOPER.md
 
 source:
      - path: ..
