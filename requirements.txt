@@ -1,5 +1,6 @@
 dill
 pytest
+hypothesis
 torch
 torchvision
 matplotlib
