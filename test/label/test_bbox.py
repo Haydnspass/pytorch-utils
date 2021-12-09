@@ -311,9 +311,10 @@ def test_random_zoom_bbox():
     zoom_range = (0.5, 3)
     box_rand = box.random_zoom(*zoom_range)
 
-    assert np.array_equal(
+    np.testing.assert_array_almost_equal(
         box_rand.cxcywh[..., :2],
-        box.cxcywh[..., :2]
+        box.cxcywh[..., :2],
+
     ), "Centers must not change"
     assert pytest.approx(
         box_rand.cxcywh[..., 2] / box.cxcywh[..., 2],
