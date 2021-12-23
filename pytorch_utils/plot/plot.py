@@ -1,13 +1,13 @@
 from typing import Optional, List
 
 import cv2
-import numpy as np
 import torch
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 from .. import label
 from .. import lazy
+from ..data.conversion import torch_cv2, cv2_torch
 
 
 @lazy.cycle.torchify(0)
@@ -158,18 +158,6 @@ def plot_keypoints(keypoints: torch.Tensor, graph: Optional[List[tuple]] = None,
     if img_mode == "torch":
         img = cv2_torch(img)
     return img
-
-
-def torch_cv2(img: torch.Tensor) -> torch.Tensor:
-    if img.dim() == 3:
-        return img.permute(1, 2, 0)[..., [-1, 1, 0]].numpy()
-    return img.numpy()
-
-
-def cv2_torch(img: np.array) -> torch.Tensor:
-    if img.ndim == 3:
-        return torch.from_numpy(img).permute(-1, 0, 1)[[-1, 1, 0]]
-    return torch.from_numpy(img)
 
 
 class PlotKeypoints:

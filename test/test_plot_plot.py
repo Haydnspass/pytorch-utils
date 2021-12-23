@@ -1,13 +1,11 @@
-import tempfile
 import unittest.mock
 
-import cv2
 from matplotlib import cbook
 import matplotlib.pyplot as plt
-import numpy as np
 import pytest
 import torch
 
+import pytorch_utils.data.conversion
 import pytorch_utils.plot.plot
 
 
@@ -90,12 +88,3 @@ def test_plot_bbox(cv2_backend, rgb_sample):
     plt.show()
 
 
-@pytest.mark.parametrize("img", [torch.rand(3, 32, 64), torch.rand(32, 64)])
-def test_torch_cv2_conversion(img):
-
-    np.testing.assert_array_almost_equal(
-        pytorch_utils.plot.plot.cv2_torch(
-            pytorch_utils.plot.plot.torch_cv2(img)
-        ).numpy(),
-        img.numpy()
-    )
