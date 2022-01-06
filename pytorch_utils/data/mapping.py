@@ -22,12 +22,30 @@ class FileMappedTensor(ABC):
         if not isinstance(pos, tuple):
             pos = tuple([pos])
 
-        return self._load(pos[0])[pos[1:]]
+        # ellipsis not supported as of now
+        for p in pos:
+            if isinstance(p, type(...)):
+                raise NotImplementedError(f"Ellipsis not yet supported.")
+
+        if isinstance(pos[0], int):  # dim will be reduced
+            return self._load(pos[0])[pos[1:]]
+
+        # dim will not be reduced by 0th pos (maybe by later ones)
+        # here we need to introduce a helper no-op slice in 0th dim, to slice
+        # the correct dims
+        pos_helper = (slice(None), *pos[1:])
+        return self._load(pos[0])[pos_helper]
 
     def __setitem__(self, key, value):
         raise NotImplementedError
 
     def __len__(self):
+        raise NotImplementedError
+
+    def size(self):
+        raise NotImplementedError
+
+    def dim(self):
         raise NotImplementedError
 
     @abstractmethod
@@ -86,6 +104,9 @@ class MultiMappedTensor(MultiMapped):
     def size(self, dim: Optional[int] = None):
         s = torch.Size([len(self), *self[0].size()])
         return s[dim] if dim is not None else s
+
+    def dim(self) -> int:
+        return self[0].dim() + 1
 
     def _load(self, pos) -> torch.Tensor:
         data = super()._load(pos)

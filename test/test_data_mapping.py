@@ -42,6 +42,9 @@ def sample_pngs_discontinous(sample_pngs):
 
 class _TestFileMappedTensor(ABC):
 
+    def test_dim(self, tensor):
+        assert isinstance(tensor.dim(), int)
+
     def test_load(self, tensor):
 
         assert isinstance(tensor._load(1), torch.Tensor), "Failed on single index load."
@@ -68,6 +71,9 @@ class TestMultiMappedList(_TestFileMappedTensor):
 
         return mapping.MultiMapped([sample_pngs_discontinous / f"sample_{i}.png" for i in range(10)], loader)
 
+    def test_dim(self, tensor):
+        return
+
     def test_len(self, tensor):
         assert len(tensor) == 10
 
@@ -93,8 +99,26 @@ class TestMultiMappedTensor(_TestFileMappedTensor):
     def test_len(self, tensor, sample_pngs):
         assert len(tensor) == len(list(sample_pngs.glob('*.png')))
 
+    def test_dim(self, tensor):
+        super().test_dim(tensor)
+
+        assert tensor.dim() == 4
+
     def test_size(self, tensor, sample_pngs):
         assert tensor.size() == torch.Size([len(list(sample_pngs.glob('*.png'))), 32, 40, 4])
+
+    def test_getitem_slice(self, tensor):
+        super().test_getitem_slice(tensor)
+        # test against native impl
+        tensor_nat = tensor[:]
+
+        assert tensor.size() == tensor_nat.size()
+        assert tensor[:].size() == tensor_nat[:].size()
+        assert tensor[0].size() == tensor_nat[0].size()
+        assert tensor[0, :].size() == tensor_nat[0, :].size()
+        # assert tensor[..., 0].size() == tensor_nat[..., 0].size()
+        assert tensor[0, 0].size() == tensor_nat[0, 0].size()
+        assert tensor[:, :-1].size() == tensor_nat[:, :-1].size()
 
     def test_load(self, tensor):
         super().test_load(tensor)
