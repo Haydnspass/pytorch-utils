@@ -15,7 +15,7 @@ dependencies:
   - pyyaml
   - scikit-learn
   - deprecated
-  - opencv
+  - py-opencv
   - pydantic
   - pandas
 
