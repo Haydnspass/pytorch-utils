@@ -26,7 +26,7 @@ def recurse(x, fn: Callable, max_depth: int):
         return fn(x)
     if max_depth == 0:
         return x
-    if isinstance(x, Sequence):
+    if isinstance(x, (list, tuple)):
         return [recurse_numpy(xx, max_depth - 1) for xx in x]
     if isinstance(x, dict):
         return {k: recurse_numpy(v, max_depth - 1) for k, v in x.items()}
