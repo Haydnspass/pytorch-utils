@@ -1,7 +1,7 @@
 import torch
 
 
-def unbind(t: torch.Tensor, dim: int, clone: bool = False) -> tuple:
+def unbind(t: torch.Tensor, dim: int = 0, clone: bool = False) -> tuple:
     """
     Unbind with clone option
 
