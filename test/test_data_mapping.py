@@ -116,9 +116,12 @@ class TestMultiMappedTensor(_TestFileMappedTensor):
         assert tensor[:].size() == tensor_nat[:].size()
         assert tensor[0].size() == tensor_nat[0].size()
         assert tensor[0, :].size() == tensor_nat[0, :].size()
-        # assert tensor[..., 0].size() == tensor_nat[..., 0].size()
+        assert tensor[:, 0, :].size() == tensor_nat[:, 0, :].size()
         assert tensor[0, 0].size() == tensor_nat[0, 0].size()
         assert tensor[:, :-1].size() == tensor_nat[:, :-1].size()
+
+        # ToDo: Implement ellipsis
+        # assert tensor[..., 0].size() == tensor_nat[..., 0].size()
 
     def test_load(self, tensor):
         super().test_load(tensor)
