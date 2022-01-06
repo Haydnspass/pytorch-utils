@@ -8,3 +8,4 @@ tqdm
 pyyaml
 scikit-learn
 Deprecated
+opencv-python
