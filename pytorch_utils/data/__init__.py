@@ -4,4 +4,4 @@ from . import dataset
 from . import utils
 
 from .mapping import FileMappedTensor, MultiMapped, MultiMappedTensor
-from .utils import unbind
+from .utils import recurse, recurse_numpy, recurse_torch, unbind
