@@ -23,6 +23,15 @@ def test_bbox_clone():
     assert (b_clone.scores == torch.Tensor([0.7])).all()
 
 
+def test_bbox_cat():
+    b = [bbox.BBox([1., 2., 3., 4], scores=torch.Tensor([.1])), bbox.BBox([5., 6., 7., 8], scores=torch.Tensor([.5]))]
+
+    b_cat = bbox.BBox.cat(b)
+    b_expct = bbox.BBox([[1., 2., 3., 4], [5., 6., 7., 8]], scores=torch.Tensor([.1, .5]))
+
+    assert b_cat == b_expct
+
+
 def test_bbox_eq():
     b0 = bbox.BBox([[1., 2., 3., 4.]], 'xyxy')
     b1 = bbox.BBox([[2., 3., 2., 2.]], 'cxcywh')

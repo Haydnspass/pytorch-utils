@@ -75,6 +75,19 @@ class BBox:
     def clone(self):
         return BBox(self.xyxy, mode='xyxy', scores=self.scores)
 
+    @classmethod
+    def cat(cls, boxes):
+        for b in boxes:
+            assert b.xyxy.dim() == 1
+            assert b.scores.dim() in (0, 1)
+            assert len(b) == 1
+
+        return cls.from_dict({
+            "data": torch.stack([b.xyxy for b in boxes]),
+            "scores": torch.cat([b.scores.view(-1) for b in boxes]),
+            "mode": "xyxy",
+        })
+
     def limit_bbox(self, img_size: torch.Size, eps_border=1e-6, order='matplotlib',
                     check: bool = True):
         return self.clone().limit_bbox_(img_size, eps_border, order, check)
