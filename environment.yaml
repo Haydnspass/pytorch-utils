@@ -5,19 +5,22 @@ channels:
   - conda-forge
 
 dependencies:
-  - dill
-  - pytest
-  - hypothesis
-  - pytorch
+  - python >=3.8,<3.10
+  - pytorch >=1.7.1
   - torchvision
   - matplotlib
-  - tqdm
-  - pyyaml
-  - scikit-learn
-  - deprecated
   - py-opencv
   - pydantic
   - pandas
+  - tqdm
+  - pyyaml
+  - scikit-learn
+  - dill
+  - deprecated
+
+  # test
+  - pytest
+  - hypothesis
 
   # developer
   - bump2version

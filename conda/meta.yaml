@@ -12,18 +12,20 @@ build:
 
 requirements:
   host:
-    - python >=3.7
-    - pip
+    - python >=3.8,<3.10
 
   run:
     - python >=3.8,<3.10
-    - dill
     - pytorch >=1.7.1
     - torchvision
     - matplotlib
+    - py-opencv
+    - pydantic
+    - pandas
     - tqdm
     - pyyaml
     - scikit-learn
+    - dill
     - deprecated
 
   test:
@@ -31,6 +33,7 @@ requirements:
       - test
     requires:
       - pytest
+      - hypothesis
     imports:  # Note: seems to be bugged in conda-build
       - pytorch_utils
     commands:
